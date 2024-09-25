@@ -501,73 +501,103 @@ class IC_BrivGemFarm_Class
     ; Stack Briv's SteelBones by switching to his formation and restarting the game.
     StackRestart()
     {
-        lastStacks := stacks := g_BrivUserSettings[ "AutoCalculateBrivStacks" ] ? g_SF.Memory.ReadSBStacks() : this.GetNumStacksFarmed()
-        targetStacks := g_BrivUserSettings[ "AutoCalculateBrivStacks" ] ? (this.TargetStacks - this.LeftoverStacks) : g_BrivUserSettings[ "TargetStacks" ]
+        LogMessage("Starting StackRestart()")
+        lastStacks := stacks := g_BrivUserSettings["AutoCalculateBrivStacks"] ? g_SF.Memory.ReadSBStacks() : this.GetNumStacksFarmed()
+        targetStacks := g_BrivUserSettings["AutoCalculateBrivStacks"] ? (this.TargetStacks - this.LeftoverStacks) : g_BrivUserSettings["TargetStacks"]
+        LogMessage("Initial stacks: " . stacks . ", Target stacks: " . targetStacks)
+
         if (stacks >= targetStacks)
+        {
+            LogMessage("Target stacks already reached. Exiting StackRestart()")
             return
+        }
+
         numSilverChests := g_SF.Memory.ReadChestCountByID(1)
         numGoldChests := g_SF.Memory.ReadChestCountByID(2)
+        LogMessage("Available chests - Silver: " . numSilverChests . ", Gold: " . numGoldChests)
+
         retryAttempt := 0
         maxRetries := 2
         if (this.LastStackSuccessArea == 0)
             maxRetries := 1
-        while ( stacks < targetStacks AND retryAttempt <= maxRetries )
+        LogMessage("Max retries set to: " . maxRetries)
+
+        while (stacks < targetStacks AND retryAttempt <= maxRetries)
         {
-            this.StackFailRetryAttempt++ ; per run
-            retryAttempt++               ; pre stackfarm call
+            this.StackFailRetryAttempt++
+            retryAttempt++
+            LogMessage("Starting retry attempt #" . retryAttempt)
+
             this.StackFarmSetup()
-            g_SF.CurrentZone := g_SF.Memory.ReadCurrentZone() ; record current zone before saving for bad progression checks
+            g_SF.CurrentZone := g_SF.Memory.ReadCurrentZone()
+            LogMessage("Current zone after StackFarmSetup: " . g_SF.CurrentZone)
+
             modronResetZone := g_SF.Memory.GetModronResetArea()
             if (modronResetZone != "" AND g_SF.CurrentZone > modronResetZone)
             {
+                LogMessage("ERROR: Attempted to offline stack after modron reset. Current zone: " . g_SF.CurrentZone . ", Modron reset zone: " . modronResetZone)
                 g_SharedData.LoopString := "Attempted to offline stack after modron reset - verify settings"
                 break
             }
-            g_SF.CloseIC( "StackRestart" . (this.StackFailRetryAttempt > 1 ? (" - Warning: Retry #" . this.StackFailRetryAttempt - 1 . ". Check Stack Settings."): "") )
-            g_SharedData.LoopString := "Stack Sleep: "
-            chestsCompletedString := ""
+
+            g_SF.CloseIC("StackRestart" . (this.StackFailRetryAttempt > 1 ? (" - Warning: Retry #" . this.StackFailRetryAttempt - 1 . ". Check Stack Settings.") : ""))
+
             StartTime := A_TickCount
             ElapsedTime := 0
             chestsCompletedString := " " . this.DoChests(numSilverChests, numGoldChests)
-            while ( ElapsedTime < g_BrivUserSettings[ "RestartStackTime" ] )
+            LogMessage("Chests completed: " . chestsCompletedString)
+
+            while (ElapsedTime < g_BrivUserSettings["RestartStackTime"])
             {
-                g_SharedData.LoopString := "Stack Sleep: " . g_BrivUserSettings[ "RestartStackTime" ] - ElapsedTime . chestsCompletedString
+                g_SharedData.LoopString := "Stack Sleep: " . g_BrivUserSettings["RestartStackTime"] - ElapsedTime . chestsCompletedString
                 Sleep, 62
                 ElapsedTime := A_TickCount - StartTime
             }
+            LogMessage("Stack sleep completed. Elapsed time: " . ElapsedTime . "ms")
+
             g_SF.SafetyCheck()
-            stacks := g_BrivUserSettings[ "AutoCalculateBrivStacks" ] ? g_SF.Memory.ReadSBStacks() : this.GetNumStacksFarmed()
-            ;check if save reverted back to below stacking conditions
-            if (g_SF.Memory.ReadCurrentZone() < g_BrivUserSettings[ "MinStackZone" ])
+            stacks := g_BrivUserSettings["AutoCalculateBrivStacks"] ? g_SF.Memory.ReadSBStacks() : this.GetNumStacksFarmed()
+            LogMessage("Stacks after sleep: " . stacks)
+
+            if (g_SF.Memory.ReadCurrentZone() < g_BrivUserSettings["MinStackZone"])
             {
+                LogMessage("ERROR: Stack Sleep Failed - Current zone below MinStackZone")
                 g_SharedData.LoopString := "Stack Sleep: Failed (zone < min)"
-                Break  ; "Bad Save? Loaded below stack zone, see value."
+                Break
             }
+
             g_SharedData.PreviousStacksFromOffline := stacks - lastStacks
+            LogMessage("Stacks gained this attempt: " . g_SharedData.PreviousStacksFromOffline)
             lastStacks := stacks
         }
+
         if (retryAttempt >= maxRetries)
         {
-            Loop, 4 ; add next 4 areas to failed stacks so next attempt would be CurrentZone + 4
+            LogMessage("Max retries reached. Recording failed stack areas.")
+            Loop, 4
             {
-                this.StackFailAreasTally[g_SF.CurrentZone + A_Index - 1] := (this.StackFailAreasTally[g_SF.CurrentZone + A_Index - 1] == "") ? 1 : (this.StackFailAreasTally[g_SF.CurrentZone + A_Index - 1] + 1)
-                ; debugStackFailAreasTallyString := ArrFnc.GetDecFormattedAssocArrayString(this.StackFailAreasTally)
-                this.StackFailAreasThisRunTally[g_SF.CurrentZone + A_Index - 1] := 1
-                ; debugStackStackFailAreasThisRunTallyString := ArrFnc.GetDecFormattedAssocArrayString(this.StackFailAreasThisRunTally)
-                this.LastStackSuccessArea := 0
+                currentZone := g_SF.CurrentZone + A_Index - 1
+                this.StackFailAreasTally[currentZone] := (this.StackFailAreasTally[currentZone] == "") ? 1 : (this.StackFailAreasTally[currentZone] + 1)
+                this.StackFailAreasThisRunTally[currentZone] := 1
+                LogMessage("Recorded failed stack area: " . currentZone)
             }
+            this.LastStackSuccessArea := 0
         }
         else if (retryAttempt == 1)
         {
+            LogMessage("Stack successful on first attempt at zone: " . g_SF.CurrentZone)
             this.StackFailAreasTally[g_SF.CurrentZone] := 0
             this.LastStackSuccessArea := g_SF.CurrentZone
         }
         else
         {
+            LogMessage("Stack successful after retries at zone: " . g_SF.CurrentZone)
             this.LastStackSuccessArea := g_SF.CurrentZone
         }
+
         g_PreviousZoneStartTime := A_TickCount
-        return 
+        LogMessage("StackRestart() completed. Final stacks: " . stacks)
+        return
     }
 
     /*  StackNormal - Stack Briv's SteelBones by switching to his formation and waiting for stacks to build.

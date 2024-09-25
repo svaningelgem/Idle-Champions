@@ -379,6 +379,8 @@ class IC_BrivGemFarm_Class
     ; Determines if offline stacking is expected with current settings and conditions.
     ShouldOfflineStack()
     {
+        return 0
+/*
         gemsMax := g_BrivUserSettings[ "ForceOfflineGemThreshold" ]
         runsMax := g_BrivUserSettings[ "ForceOfflineRunThreshold" ]
         ; hybrid stacking not used. Use default test for offline stacking. 
@@ -402,6 +404,7 @@ class IC_BrivGemFarm_Class
         }
         ; hybrid stacking enabled but conditions for offline stacking not met
         return 0
+*/
     }
 
     ;thanks meviin for coming up with this solution
@@ -435,26 +438,42 @@ class IC_BrivGemFarm_Class
     ; Stops progress and switches to appropriate party to prepare for stacking Briv's SteelBones.
     StackFarmSetup()
     {
+        LogMessage("Starting StackFarmSetup")
+
         if (!g_SF.KillCurrentBoss() ) ; Previously/Alternatively FallBackFromBossZone()
+        {
+            LogMessage("KillCurrentBoss failed, falling back from boss zone")
             g_SF.FallBackFromBossZone()
+        }
+
         inputValues := g_SCKeyMap["w"] ; Stack farm formation hotkey
+        LogMessage("Setting stack farm formation with hotkey: " . inputValues)
+
         g_SF.DirectedInput(,, inputValues )
         g_SF.WaitForTransition( inputValues )
         g_SF.ToggleAutoProgress( 0 , false, true )
+
         StartTime := A_TickCount
         ElapsedTime := 0
         counter := 0
         sleepTime := 50
         g_SharedData.LoopString := "Setting stack farm formation."
+
         while ( !g_SF.IsCurrentFormation(g_SF.Memory.GetFormationByFavorite( 2 )) AND ElapsedTime < 5000 )
         {
+            LogMessage( "Waiting for Formation2" )
             ElapsedTime := A_TickCount - StartTime
             if (ElapsedTime > (counter * sleepTime)) ; input limiter..
             {
+                LogMessage( "Pressing " . inputValues )
                 g_SF.DirectedInput(,,inputValues)
                 counter++
             }
         }
+
+        LogMessage( "Is ok? > " . g_SF.IsCurrentFormation(g_SF.Memory.GetFormationByFavorite( 2 ) ) )
+        LogMessage("StackFarmSetup completed. ElapsedTime: " . ElapsedTime . "ms")
+
         return
     }
 

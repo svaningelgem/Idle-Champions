@@ -1,6 +1,18 @@
 #include %A_LineFile%\..\SH_KeyHelper.ahk
 #include %A_LineFile%\..\SH_ArrFnc.ahk
 
+
+g_LogFile := A_ScriptDir . "\StackFarmSetup.log"
+
+
+LogMessage(message)
+{
+    global g_LogFile
+    timeStamp := A_YYYY . "-" . A_MM . "-" . A_DD . " " . A_Hour . ":" . A_Min . ":" . A_Sec
+    FileAppend, %timeStamp% - %message%`n, %g_LogFile%
+}
+
+
 class SH_SharedFunctions
 {
     Hwnd := 0

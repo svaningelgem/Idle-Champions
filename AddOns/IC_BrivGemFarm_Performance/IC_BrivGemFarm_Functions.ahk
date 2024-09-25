@@ -610,33 +610,57 @@ class IC_BrivGemFarm_Class
     ; Stack Briv's SteelBones by switching to his formation.
     StackNormal(maxOnlineStackTime := 300000)
     {
-        stacks := g_BrivUserSettings[ "AutoCalculateBrivStacks" ] ? g_SF.Memory.ReadSBStacks() : this.GetNumStacksFarmed()
-        targetStacks := g_BrivUserSettings[ "AutoCalculateBrivStacks" ] ? (this.TargetStacks - this.LeftoverStacks) : g_BrivUserSettings[ "TargetStacks" ]
+        LogMessage("Starting StackNormal() with maxOnlineStackTime: " . maxOnlineStackTime . "ms")
+
+        stacks := g_BrivUserSettings["AutoCalculateBrivStacks"] ? g_SF.Memory.ReadSBStacks() : this.GetNumStacksFarmed()
+        targetStacks := g_BrivUserSettings["AutoCalculateBrivStacks"] ? (this.TargetStacks - this.LeftoverStacks) : g_BrivUserSettings["TargetStacks"]
+        LogMessage("Initial stacks: " . stacks . ", Target stacks: " . targetStacks)
+
         if (this.ShouldAvoidRestack(stacks, targetStacks))
+        {
+            LogMessage("ShouldAvoidRestack() returned true. Exiting StackNormal()")
             return
+        }
+
         this.StackFarmSetup()
+        LogMessage("StackFarmSetup() completed")
+
         StartTime := A_TickCount
         ElapsedTime := 0
         g_SharedData.LoopString := "Stack Normal"
-        while ( stacks < targetStacks AND ElapsedTime < maxOnlineStackTime )
+
+        loopCount := 0
+        while (stacks < targetStacks AND ElapsedTime < maxOnlineStackTime)
         {
+            loopCount++
             g_SF.FallBackFromBossZone()
-            stacks := g_BrivUserSettings[ "AutoCalculateBrivStacks" ] ? g_SF.Memory.ReadSBStacks() : this.GetNumStacksFarmed()
+            stacks := g_BrivUserSettings["AutoCalculateBrivStacks"] ? g_SF.Memory.ReadSBStacks() : this.GetNumStacksFarmed()
             Sleep, 124
             ElapsedTime := A_TickCount - StartTime
+
+            if (Mod(loopCount, 10) == 0)  ; Log every 10 iterations to avoid excessive logging
+            {
+                LogMessage("Stacking progress - Current stacks: " . stacks . ", Elapsed time: " . ElapsedTime . "ms")
+            }
         }
-        if ( ElapsedTime >= maxOnlineStackTime)
+
+        if (ElapsedTime >= maxOnlineStackTime)
         {
-            this.RestartAdventure( "Online stacking took too long (> " . (maxOnlineStackTime / 1000) . "s) - z[" . g_SF.Memory.ReadCurrentZone() . "].")
+            currentZone := g_SF.Memory.ReadCurrentZone()
+            LogMessage("Online stacking took too long. Elapsed time: " . ElapsedTime . "ms, Current zone: " . currentZone)
+            this.RestartAdventure("Online stacking took too long (> " . (maxOnlineStackTime / 1000) . "s) - z[" . currentZone . "].")
             this.SafetyCheck()
             g_PreviousZoneStartTime := A_TickCount
+            LogMessage("Adventure restarted due to timeout")
             return
         }
+
         g_PreviousZoneStartTime := A_TickCount
         g_SF.FallBackFromZone()
+
+        LogMessage("StackNormal() completed. Final stacks: " . stacks . ", Total time: " . (A_TickCount - StartTime) . "ms")
         return
     }
-
     ; avoids attempts to stack again after stacking has been completed and level not reset yet.
     ShouldAvoidRestack(stacks, targetStacks)
     {

@@ -7,7 +7,7 @@
     "Info" : "This Addon will allow to set up maximum champion level settings for BrivGemFarm.",
     "Dependencies" : [
         {
-            "Name":"Own Briv Gem Farm",
+            "Name":"Briv Gem Farm",
             "Version":"v1.0.0"
         }
     ]

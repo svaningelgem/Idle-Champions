@@ -20,7 +20,6 @@ Gui, ICScriptHub:Add, Text, x15 y+10 w120, User Settings:
 FileCreateDir, % A_LineFile . "\..\Profiles"
 ReloadBrivGemFarmSettings(True)
 Gui, ICScriptHub:Add, Checkbox, vFkeysCheck x15 y+5, Level Champions with Fkeys?
-Gui, ICScriptHub:Add, Checkbox, vStackFailRecoveryCheck x15 y+5, Enable manual resets to recover from failed Briv stacking?
 Gui, ICScriptHub:Add, Checkbox, vDisableDashWaitCheck x15 y+5, Disable Dash Wait?
 GUIFunctions.UseThemeTextColor("InputBoxTextColor")
 Gui, ICScriptHub:Add, Edit, vNewStackZone x15 y+5 w50, % g_BrivUserSettings[ "StackZone" ]
@@ -208,7 +207,6 @@ class IC_BrivGemFarm_Component
     UpdateGUICheckBoxes()
     {
         GuiControl,ICScriptHub:, FkeysCheck, % g_BrivUserSettings[ "Fkeys" ]
-        GuiControl,ICScriptHub:, StackFailRecoveryCheck, % g_BrivUserSettings[ "StackFailRecovery" ]
         GuiControl,ICScriptHub:, BuySilversCheck, % g_BrivUserSettings[ "BuySilvers" ]
         GuiControl,ICScriptHub:, BuyGoldsCheck, % g_BrivUserSettings[ "BuyGolds" ] 
         GuiControl,ICScriptHub:, OpenSilversCheck, % g_BrivUserSettings[ "OpenSilvers" ] 
@@ -346,7 +344,6 @@ class IC_BrivGemFarm_Component
         if(OptionSettingCheck_DoChestsContinuous != "")
             IC_BrivGemFarm_AdvancedSettings_Component.SaveAdvancedSettings()
         g_BrivUserSettings[ "Fkeys" ] := FkeysCheck
-        g_BrivUserSettings[ "StackFailRecovery" ] := StackFailRecoveryCheck
         g_BrivUserSettings[ "StackZone" ] := StrReplace(NewStackZone, ",")
         g_BrivUserSettings[ "MinStackZone" ] := StrReplace(NewMinStackZone, ",")
         g_BrivUserSettings[ "TargetStacks" ] := StrReplace(NewTargetStacks, ",")
@@ -442,7 +439,6 @@ class IC_BrivGemFarm_Component
             g_BrivUserSettings := g_SF.LoadObjectFromJSON( A_LineFile . "\..\Profiles\" . settings . "_Settings.json" )
         this.LastSelected := settings
         GuiControl, ICScriptHub:, FkeysCheck, % g_BrivUserSettings[ "Fkeys" ]
-        GuiControl, ICScriptHub:, StackFailRecoveryCheck, % g_BrivUserSettings[ "StackFailRecovery" ]
         GuiControl, ICScriptHub:, NewStackZone, % g_BrivUserSettings[ "StackZone" ]
         GuiControl, ICScriptHub:, NewMinStackZone, % g_BrivUserSettings[ "MinStackZone" ]
         GuiControl, ICScriptHub:, NewTargetStacks, % g_BrivUserSettings[ "TargetStacks" ]

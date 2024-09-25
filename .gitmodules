@@ -1,0 +1,6 @@
+[submodule "ScriptHub-AutomaticOffsets"]
+	path = ScriptHub-AutomaticOffsets
+	url = https://github.com/svaningelgem/ScriptHub-AutomaticOffsets.git
+[submodule "IC_Addons"]
+	path = IC_Addons
+	url = https://github.com/imp444/IC_Addons.git

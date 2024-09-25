@@ -81,9 +81,9 @@ Class IC_RNGWaitingRoom_Component
     {
         settings := {}
         settings.EllywickGFEnabled := true
-        settings.EllywickGFGemCards := 1
-        settings.EllywickGFGemMaxRedraws := 1
-        settings.EllywickGFGemWaitFor5Draws := true
+        settings.EllywickGFGemCards := 3
+        settings.EllywickGFGemMaxRedraws := 999
+        settings.EllywickGFGemWaitFor5Draws := false
         return settings
     }
 

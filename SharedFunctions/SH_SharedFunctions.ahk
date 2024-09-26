@@ -2,15 +2,7 @@
 #include %A_LineFile%\..\SH_ArrFnc.ahk
 
 
-g_LogFile := A_ScriptDir . "\StackFarmSetup.log"
-
-
-LogMessage(message)
-{
-    global g_LogFile
-    timeStamp := A_YYYY . "-" . A_MM . "-" . A_DD . " " . A_Hour . ":" . A_Min . ":" . A_Sec
-    FileAppend, %timeStamp% - %message%`n, %g_LogFile%
-}
+global g_LogFile := A_LineFile . "\..\..\StackFarmSetup.log"
 
 
 class SH_SharedFunctions
@@ -166,5 +158,15 @@ class SH_SharedFunctions
         }
         Critical, Off
         ; g_KeyPresses := TestVar
+    }
+
+    LogMessage(message)
+    {
+        timeStamp := A_YYYY . "-" . A_MM . "-" . A_DD . " " . A_Hour . ":" . A_Min . ":" . A_Sec
+        FileAppend, %timeStamp% - %message%`n, %g_LogFile%
+        if (ErrorLevel)
+        {
+            MsgBox, Error writing to log file: %g_LogFile%
+        }
     }
 }

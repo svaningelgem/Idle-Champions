@@ -241,7 +241,7 @@ Class IC_BrivGemFarm_LevelUp_HeroDefinesLoaderWorker
     ; Write json (object) to a file (fileName).
     WriteObjectToJSON(fileName, ByRef object)
     {
-        objectJSON := JSON.stringify(object)
+        objectJSON := JSON.stringify(object, "", 4)
         FileDelete, %fileName%
         FileAppend, %objectJSON%, %fileName%, UTF-8
     }

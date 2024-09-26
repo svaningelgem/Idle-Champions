@@ -211,106 +211,162 @@ class IC_BrivGemFarm_Class
     GemFarm()
     {
         static lastResetCount := 0
+        g_SF.LogMessage("Starting GemFarm()")
+
         g_SharedData.TriggerStart := true
-        g_SF.Hwnd := WinExist("ahk_exe " . g_UserSettings[ "ExeName"])
-        existingProcessID := g_UserSettings[ "ExeName"]
+        g_SF.Hwnd := WinExist("ahk_exe " . g_UserSettings["ExeName"])
+        existingProcessID := g_UserSettings["ExeName"]
         Process, Exist, %existingProcessID%
         g_SF.PID := ErrorLevel
         Process, Priority, % g_SF.PID, High
+        g_SF.LogMessage("Process priority set to High for PID: " . g_SF.PID)
+
         g_SF.Memory.OpenProcessReader()
         if (g_SF.VerifyAdventureLoaded() < 0)
+        {
+            g_SF.LogMessage("Failed to verify adventure loaded. Exiting GemFarm()")
             return
+        }
+
         g_SF.CurrentAdventure := g_SF.Memory.ReadCurrentObjID()
+        g_SF.LogMessage("Current Adventure ID: " . g_SF.CurrentAdventure)
+
         g_ServerCall.UpdatePlayServer()
         g_SF.ResetServerCall()
         g_SF.PatronID := g_SF.Memory.ReadPatronID()
-        this.LastStackSuccessArea := g_UserSettings [ "StackZone" ]
+        g_SF.LogMessage("Patron ID: " . g_SF.PatronID)
+
+        this.LastStackSuccessArea := g_UserSettings["StackZone"]
         this.StackFailAreasThisRunTally := {}
-        g_SF.GameStartFormation := g_BrivUserSettings[ "BrivJumpBuffer" ] > 0 ? 3 : 1
+        g_SF.GameStartFormation := g_BrivUserSettings["BrivJumpBuffer"] > 0 ? 3 : 1
+        g_SF.LogMessage("Game Start Formation set to: " . g_SF.GameStartFormation)
+
         g_SaveHelper.Init() ; slow call, loads briv dictionary (3+s)
+        g_SF.LogMessage("SaveHelper initialized")
+
         formationModron := g_SF.Memory.GetActiveModronFormation()
-        if (this.PreFlightCheck() == -1) ; Did not pass pre flight check.
+        g_SF.LogMessage("Active Modron Formation: " . formationModron)
+
+        if (this.PreFlightCheck() == -1)
+        {
+            g_SF.LogMessage("Pre-flight check failed. Exiting GemFarm()")
             return -1
+        }
+
         g_PreviousZoneStartTime := A_TickCount
         g_SharedData.StackFail := 0
+
+        g_SF.LogMessage("Entering main loop")
         loop
         {
             g_SharedData.LoopString := "Main Loop"
             CurrentZone := g_SF.Memory.ReadCurrentZone()
-            if (CurrentZone == "" AND !g_SF.SafetyCheck() ) ; Check for game closed
-                g_SF.ToggleAutoProgress( 1, false, true ) ; Turn on autoprogress after a restart
-            g_SF.SetFormation(g_BrivUserSettings)
-            if (g_SF.Memory.ReadResetsCount() > lastResetCount OR g_SharedData.TriggerStart) ; first loop or Modron has reset
+            g_SF.LogMessage("Current Zone: " . CurrentZone)
+
+            if (CurrentZone == "" AND !g_SF.SafetyCheck())
             {
+                g_SF.LogMessage("Game closed detected. Toggling auto progress.")
+                g_SF.ToggleAutoProgress(1, false, true)
+            }
+
+            g_SF.SetFormation(g_BrivUserSettings)
+
+            if (g_SF.Memory.ReadResetsCount() > lastResetCount OR g_SharedData.TriggerStart)
+            {
+                g_SF.LogMessage("Modron reset detected or TriggerStart active")
                 g_SharedData.BossesHitThisRun := 0
-                g_SF.ToggleAutoProgress( 0, false, true )
+                g_SF.ToggleAutoProgress(0, false, true)
                 g_SharedData.StackFail := this.CheckForFailedConv()
+                g_SF.LogMessage("StackFail status: " . g_SharedData.StackFail)
+
                 g_SF.WaitForFirstGold()
                 keyspam := Array()
-                if g_BrivUserSettings[ "Fkeys" ]
+                if g_BrivUserSettings["Fkeys"]
                     keyspam := g_SF.GetFormationFKeys(formationModron)
                 doKeySpam := true
                 keyspam.Push("{ClickDmg}")
                 this.DoPartySetup()
                 lastResetCount := g_SF.Memory.ReadResetsCount()
                 g_SF.Memory.ActiveEffectKeyHandler.Refresh()
-                worstCase := g_BrivUserSettings[ "AutoCalculateWorstCase" ]
-                g_SharedData.TargetStacks := this.TargetStacks := g_SF.CalculateBrivStacksToReachNextModronResetZone(worstCase) + 50 ; 50 stack safety net
+
+                worstCase := g_BrivUserSettings["AutoCalculateWorstCase"]
+                g_SharedData.TargetStacks := this.TargetStacks := g_SF.CalculateBrivStacksToReachNextModronResetZone(worstCase) + 50
                 this.LeftoverStacks := g_SF.CalculateBrivStacksLeftAtTargetZone(g_SF.Memory.ReadCurrentZone(), g_SF.Memory.GetModronResetArea() + 1  - g_SF.ThelloraRushTest(), worstCase)
-                ; Don't reset last stack success area if 3 or more runs have failed to stack.
-                this.LastStackSuccessArea := this.StackFailAreasTally[g_UserSettings [ "StackZone" ]] < this.MaxStackRestartFails ? g_UserSettings [ "StackZone" ] : this.LastStackSuccessArea
+                g_SF.LogMessage("Target Stacks: " . g_SharedData.TargetStacks . ", Leftover Stacks: " . this.LeftoverStacks)
+
+                this.LastStackSuccessArea := this.StackFailAreasTally[g_UserSettings["StackZone"]] < this.MaxStackRestartFails ? g_UserSettings["StackZone"] : this.LastStackSuccessArea
                 this.StackFailAreasThisRunTally := {}
                 this.StackFailRetryAttempt := 0
                 StartTime := g_PreviousZoneStartTime := A_TickCount
                 PreviousZone := 1
                 g_SharedData.SwapsMadeThisRun := 0
                 g_SharedData.TriggerStart := false
-                g_SharedData.LoopString := "Main Loop"
             }
+
             if (g_SharedData.StackFail != 2)
                 g_SharedData.StackFail := Max(this.TestForSteelBonesStackFarming(), g_SharedData.StackFail)
-            if (g_SharedData.StackFail == 2 OR g_SharedData.StackFail == 4 OR g_SharedData.StackFail == 6 ) ; OR g_SharedData.StackFail == 3
+
+            if (g_SharedData.StackFail == 2 OR g_SharedData.StackFail == 4 OR g_SharedData.StackFail == 6)
+            {
+                g_SF.LogMessage("StackFail triggered restart. StackFail: " . g_SharedData.StackFail)
                 g_SharedData.TriggerStart := true
-            if (!Mod( g_SF.Memory.ReadCurrentZone(), 5 ) AND Mod( g_SF.Memory.ReadHighestZone(), 5 ) AND !g_SF.Memory.ReadTransitioning())
-                g_SF.ToggleAutoProgress( 1, true ) ; Toggle autoprogress to skip boss bag
+            }
+
+            if (!Mod(g_SF.Memory.ReadCurrentZone(), 5) AND Mod(g_SF.Memory.ReadHighestZone(), 5) AND !g_SF.Memory.ReadTransitioning())
+            {
+                g_SF.LogMessage("Toggling auto progress to skip boss bag")
+                g_SF.ToggleAutoProgress(1, true)
+            }
+
             if (g_SF.Memory.ReadResetting())
                 this.ModronResetCheck()
-            if (CurrentZone > PreviousZone ) ; needs to be greater than because offline could stacking getting stuck in descending zones.
+
+            if (CurrentZone > PreviousZone)
             {
+                g_SF.LogMessage("Zone advanced. Previous: " . PreviousZone . ", Current: " . CurrentZone)
                 PreviousZone := CurrentZone
-                if ((!Mod( g_SF.Memory.ReadCurrentZone(), 5 )) AND (!Mod( g_SF.Memory.ReadHighestZone(), 5)))
+                if ((!Mod(g_SF.Memory.ReadCurrentZone(), 5)) AND (!Mod(g_SF.Memory.ReadHighestZone(), 5)))
                 {
                     g_SharedData.TotalBossesHit++
                     g_SharedData.BossesHitThisRun++
+                    g_SF.LogMessage("Boss hit. Total: " . g_SharedData.TotalBossesHit . ", This run: " . g_SharedData.BossesHitThisRun)
                 }
-                if (doKeySpam AND g_BrivUserSettings[ "Fkeys" ] AND g_SF.AreChampionsUpgraded(formationModron))
+
+                if (doKeySpam AND g_BrivUserSettings["Fkeys"] AND g_SF.AreChampionsUpgraded(formationModron))
                 {
-                    g_SF.DirectedInput(hold:=0,release:=1, keyspam) ;keysup
+                    g_SF.LogMessage("Performing key spam")
+                    g_SF.DirectedInput(hold:=0,release:=1, keyspam)
                     keyspam := ["{ClickDmg}"]
                     doKeySpam := false
                 }
+
                 lastModronResetZone := g_SF.ModronResetZone
-                g_SF.InitZone( keyspam )
+                g_SF.InitZone(keyspam)
                 if (g_SF.ModronResetZone != lastModronResetZone)
                 {
-                    worstCase := g_BrivUserSettings[ "AutoCalculateWorstCase" ]
-                    g_SharedData.TargetStacks := this.TargetStacks := g_SF.CalculateBrivStacksToReachNextModronResetZone(worstCase) + 50 ; 50 stack safety net
+                    g_SF.LogMessage("Modron reset zone changed. Recalculating target stacks")
+                    worstCase := g_BrivUserSettings["AutoCalculateWorstCase"]
+                    g_SharedData.TargetStacks := this.TargetStacks := g_SF.CalculateBrivStacksToReachNextModronResetZone(worstCase) + 50
                     this.LeftoverStacks := g_SF.CalculateBrivStacksLeftAtTargetZone(this.Memory.ReadCurrentZone(), this.Memory.GetModronResetArea() + 1, worstCase)
+                    g_SF.LogMessage("New Target Stacks: " . g_SharedData.TargetStacks . ", New Leftover Stacks: " . this.LeftoverStacks)
                 }
-                g_SF.ToggleAutoProgress( 1 )
+                g_SF.ToggleAutoProgress(1)
                 continue
             }
-            g_SF.ToggleAutoProgress( 1 )
+
+            g_SF.ToggleAutoProgress(1)
             if (g_SF.CheckifStuck())
             {
+                g_SF.LogMessage("Detected stuck state. Triggering restart")
                 g_SharedData.TriggerStart := true
-                g_SharedData.StackFail := StackFailStates.FAILED_TO_PROGRESS ; 3
+                g_SharedData.StackFail := StackFailStates.FAILED_TO_PROGRESS
                 g_SharedData.StackFailStats.TALLY[g_SharedData.StackFail] += 1
             }
+
             Sleep, 20 ; here to keep the script responsive.
         }
     }
-
+    
     ;=====================================================
     ;Functions for Briv Stack farming, mostly for gem runs
     ;=====================================================
@@ -438,16 +494,16 @@ class IC_BrivGemFarm_Class
     ; Stops progress and switches to appropriate party to prepare for stacking Briv's SteelBones.
     StackFarmSetup()
     {
-        LogMessage("Starting StackFarmSetup")
+        g_SF.LogMessage("Starting StackFarmSetup")
 
         if (!g_SF.KillCurrentBoss() ) ; Previously/Alternatively FallBackFromBossZone()
         {
-            LogMessage("KillCurrentBoss failed, falling back from boss zone")
+            g_SF.LogMessage("KillCurrentBoss failed, falling back from boss zone")
             g_SF.FallBackFromBossZone()
         }
 
         inputValues := g_SCKeyMap["w"] ; Stack farm formation hotkey
-        LogMessage("Setting stack farm formation with hotkey: " . inputValues)
+        g_SF.LogMessage("Setting stack farm formation with hotkey: " . inputValues)
 
         g_SF.DirectedInput(,, inputValues )
         g_SF.WaitForTransition( inputValues )
@@ -461,18 +517,18 @@ class IC_BrivGemFarm_Class
 
         while ( !g_SF.IsCurrentFormation(g_SF.Memory.GetFormationByFavorite( 2 )) AND ElapsedTime < 5000 )
         {
-            LogMessage( "Waiting for Formation2" )
+            g_SF.LogMessage( "Waiting for Formation2" )
             ElapsedTime := A_TickCount - StartTime
             if (ElapsedTime > (counter * sleepTime)) ; input limiter..
             {
-                LogMessage( "Pressing " . inputValues )
+                g_SF.LogMessage( "Pressing " . inputValues )
                 g_SF.DirectedInput(,,inputValues)
                 counter++
             }
         }
 
-        LogMessage( "Is ok? > " . g_SF.IsCurrentFormation(g_SF.Memory.GetFormationByFavorite( 2 ) ) )
-        LogMessage("StackFarmSetup completed. ElapsedTime: " . ElapsedTime . "ms")
+        g_SF.LogMessage( "Is ok? > " . g_SF.IsCurrentFormation(g_SF.Memory.GetFormationByFavorite( 2 ) ) )
+        g_SF.LogMessage("StackFarmSetup completed. ElapsedTime: " . ElapsedTime . "ms")
 
         return
     }
@@ -501,41 +557,41 @@ class IC_BrivGemFarm_Class
     ; Stack Briv's SteelBones by switching to his formation and restarting the game.
     StackRestart()
     {
-        LogMessage("Starting StackRestart()")
+        g_SF.LogMessage("Starting StackRestart()")
         lastStacks := stacks := g_BrivUserSettings["AutoCalculateBrivStacks"] ? g_SF.Memory.ReadSBStacks() : this.GetNumStacksFarmed()
         targetStacks := g_BrivUserSettings["AutoCalculateBrivStacks"] ? (this.TargetStacks - this.LeftoverStacks) : g_BrivUserSettings["TargetStacks"]
-        LogMessage("Initial stacks: " . stacks . ", Target stacks: " . targetStacks)
+        g_SF.LogMessage("Initial stacks: " . stacks . ", Target stacks: " . targetStacks)
 
         if (stacks >= targetStacks)
         {
-            LogMessage("Target stacks already reached. Exiting StackRestart()")
+            g_SF.LogMessage("Target stacks already reached. Exiting StackRestart()")
             return
         }
 
         numSilverChests := g_SF.Memory.ReadChestCountByID(1)
         numGoldChests := g_SF.Memory.ReadChestCountByID(2)
-        LogMessage("Available chests - Silver: " . numSilverChests . ", Gold: " . numGoldChests)
+        g_SF.LogMessage("Available chests - Silver: " . numSilverChests . ", Gold: " . numGoldChests)
 
         retryAttempt := 0
         maxRetries := 2
         if (this.LastStackSuccessArea == 0)
             maxRetries := 1
-        LogMessage("Max retries set to: " . maxRetries)
+        g_SF.LogMessage("Max retries set to: " . maxRetries)
 
         while (stacks < targetStacks AND retryAttempt <= maxRetries)
         {
             this.StackFailRetryAttempt++
             retryAttempt++
-            LogMessage("Starting retry attempt #" . retryAttempt)
+            g_SF.LogMessage("Starting retry attempt #" . retryAttempt)
 
             this.StackFarmSetup()
             g_SF.CurrentZone := g_SF.Memory.ReadCurrentZone()
-            LogMessage("Current zone after StackFarmSetup: " . g_SF.CurrentZone)
+            g_SF.LogMessage("Current zone after StackFarmSetup: " . g_SF.CurrentZone)
 
             modronResetZone := g_SF.Memory.GetModronResetArea()
             if (modronResetZone != "" AND g_SF.CurrentZone > modronResetZone)
             {
-                LogMessage("ERROR: Attempted to offline stack after modron reset. Current zone: " . g_SF.CurrentZone . ", Modron reset zone: " . modronResetZone)
+                g_SF.LogMessage("ERROR: Attempted to offline stack after modron reset. Current zone: " . g_SF.CurrentZone . ", Modron reset zone: " . modronResetZone)
                 g_SharedData.LoopString := "Attempted to offline stack after modron reset - verify settings"
                 break
             }
@@ -545,7 +601,7 @@ class IC_BrivGemFarm_Class
             StartTime := A_TickCount
             ElapsedTime := 0
             chestsCompletedString := " " . this.DoChests(numSilverChests, numGoldChests)
-            LogMessage("Chests completed: " . chestsCompletedString)
+            g_SF.LogMessage("Chests completed: " . chestsCompletedString)
 
             while (ElapsedTime < g_BrivUserSettings["RestartStackTime"])
             {
@@ -553,50 +609,50 @@ class IC_BrivGemFarm_Class
                 Sleep, 62
                 ElapsedTime := A_TickCount - StartTime
             }
-            LogMessage("Stack sleep completed. Elapsed time: " . ElapsedTime . "ms")
+            g_SF.LogMessage("Stack sleep completed. Elapsed time: " . ElapsedTime . "ms")
 
             g_SF.SafetyCheck()
             stacks := g_BrivUserSettings["AutoCalculateBrivStacks"] ? g_SF.Memory.ReadSBStacks() : this.GetNumStacksFarmed()
-            LogMessage("Stacks after sleep: " . stacks)
+            g_SF.LogMessage("Stacks after sleep: " . stacks)
 
             if (g_SF.Memory.ReadCurrentZone() < g_BrivUserSettings["MinStackZone"])
             {
-                LogMessage("ERROR: Stack Sleep Failed - Current zone below MinStackZone")
+                g_SF.LogMessage("ERROR: Stack Sleep Failed - Current zone below MinStackZone")
                 g_SharedData.LoopString := "Stack Sleep: Failed (zone < min)"
                 Break
             }
 
             g_SharedData.PreviousStacksFromOffline := stacks - lastStacks
-            LogMessage("Stacks gained this attempt: " . g_SharedData.PreviousStacksFromOffline)
+            g_SF.LogMessage("Stacks gained this attempt: " . g_SharedData.PreviousStacksFromOffline)
             lastStacks := stacks
         }
 
         if (retryAttempt >= maxRetries)
         {
-            LogMessage("Max retries reached. Recording failed stack areas.")
+            g_SF.LogMessage("Max retries reached. Recording failed stack areas.")
             Loop, 4
             {
                 currentZone := g_SF.CurrentZone + A_Index - 1
                 this.StackFailAreasTally[currentZone] := (this.StackFailAreasTally[currentZone] == "") ? 1 : (this.StackFailAreasTally[currentZone] + 1)
                 this.StackFailAreasThisRunTally[currentZone] := 1
-                LogMessage("Recorded failed stack area: " . currentZone)
+                g_SF.LogMessage("Recorded failed stack area: " . currentZone)
             }
             this.LastStackSuccessArea := 0
         }
         else if (retryAttempt == 1)
         {
-            LogMessage("Stack successful on first attempt at zone: " . g_SF.CurrentZone)
+            g_SF.LogMessage("Stack successful on first attempt at zone: " . g_SF.CurrentZone)
             this.StackFailAreasTally[g_SF.CurrentZone] := 0
             this.LastStackSuccessArea := g_SF.CurrentZone
         }
         else
         {
-            LogMessage("Stack successful after retries at zone: " . g_SF.CurrentZone)
+            g_SF.LogMessage("Stack successful after retries at zone: " . g_SF.CurrentZone)
             this.LastStackSuccessArea := g_SF.CurrentZone
         }
 
         g_PreviousZoneStartTime := A_TickCount
-        LogMessage("StackRestart() completed. Final stacks: " . stacks)
+        g_SF.LogMessage("StackRestart() completed. Final stacks: " . stacks)
         return
     }
 
@@ -610,20 +666,20 @@ class IC_BrivGemFarm_Class
     ; Stack Briv's SteelBones by switching to his formation.
     StackNormal(maxOnlineStackTime := 300000)
     {
-        LogMessage("Starting StackNormal() with maxOnlineStackTime: " . maxOnlineStackTime . "ms")
+        g_SF.LogMessage("Starting StackNormal() with maxOnlineStackTime: " . maxOnlineStackTime . "ms")
 
         stacks := g_BrivUserSettings["AutoCalculateBrivStacks"] ? g_SF.Memory.ReadSBStacks() : this.GetNumStacksFarmed()
         targetStacks := g_BrivUserSettings["AutoCalculateBrivStacks"] ? (this.TargetStacks - this.LeftoverStacks) : g_BrivUserSettings["TargetStacks"]
-        LogMessage("Initial stacks: " . stacks . ", Target stacks: " . targetStacks)
+        g_SF.LogMessage("Initial stacks: " . stacks . ", Target stacks: " . targetStacks)
 
         if (this.ShouldAvoidRestack(stacks, targetStacks))
         {
-            LogMessage("ShouldAvoidRestack() returned true. Exiting StackNormal()")
+            g_SF.LogMessage("ShouldAvoidRestack() returned true. Exiting StackNormal()")
             return
         }
 
         this.StackFarmSetup()
-        LogMessage("StackFarmSetup() completed")
+        g_SF.LogMessage("StackFarmSetup() completed")
 
         StartTime := A_TickCount
         ElapsedTime := 0
@@ -640,25 +696,25 @@ class IC_BrivGemFarm_Class
 
             if (Mod(loopCount, 10) == 0)  ; Log every 10 iterations to avoid excessive logging
             {
-                LogMessage("Stacking progress - Current stacks: " . stacks . ", Elapsed time: " . ElapsedTime . "ms")
+                g_SF.LogMessage("Stacking progress - Current stacks: " . stacks . ", Elapsed time: " . ElapsedTime . "ms")
             }
         }
 
         if (ElapsedTime >= maxOnlineStackTime)
         {
             currentZone := g_SF.Memory.ReadCurrentZone()
-            LogMessage("Online stacking took too long. Elapsed time: " . ElapsedTime . "ms, Current zone: " . currentZone)
+            g_SF.LogMessage("Online stacking took too long. Elapsed time: " . ElapsedTime . "ms, Current zone: " . currentZone)
             this.RestartAdventure("Online stacking took too long (> " . (maxOnlineStackTime / 1000) . "s) - z[" . currentZone . "].")
             this.SafetyCheck()
             g_PreviousZoneStartTime := A_TickCount
-            LogMessage("Adventure restarted due to timeout")
+            g_SF.LogMessage("Adventure restarted due to timeout")
             return
         }
 
         g_PreviousZoneStartTime := A_TickCount
         g_SF.FallBackFromZone()
 
-        LogMessage("StackNormal() completed. Final stacks: " . stacks . ", Total time: " . (A_TickCount - StartTime) . "ms")
+        g_SF.LogMessage("StackNormal() completed. Final stacks: " . stacks . ", Total time: " . (A_TickCount - StartTime) . "ms")
         return
     }
     ; avoids attempts to stack again after stacking has been completed and level not reset yet.

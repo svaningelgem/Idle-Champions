@@ -4,7 +4,8 @@
 #HotkeyInterval 1000  ; The default value is 2000 (milliseconds).
 #MaxHotkeysPerInterval 70 ; The default value is 70
 #NoEnv ; Avoids checking empty variables to see if they are environment variables (recommended for all new scripts). Default behavior for AutoHotkey v2.
-; #Warn ALL, OutputDebug
+#Warn ALL, OutputDebug
+
 ;=======================
 ;Script Optimization
 ;=======================
@@ -50,6 +51,7 @@ global g_GameButton := A_LineFile . "\..\Images\idledragons-25x25.png"
 global g_MacroButton := A_LineFile . "\..\Images\macro-100x100.png"
 global g_MouseTooltips := {}
 global g_Miniscripts := {}
+
 
 ;Load themes
 GUIFunctions.LoadTheme()
@@ -247,3 +249,5 @@ MiniScriptWarning()
             return True
     }
 }
+
+g_SF.LogMessage("Main stuff loaded!")

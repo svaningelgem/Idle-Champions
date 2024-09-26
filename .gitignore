@@ -21,3 +21,4 @@ SharedFunctions/ScanCodesOverride.json
 .idea/
 IC_Addons/
 ScriptHub-AutomaticOffsets/
+*.log

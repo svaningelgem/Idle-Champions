@@ -132,30 +132,79 @@ class IC_BrivGemFarm_LevelUp_Class extends IC_BrivGemFarm_Class
     ; Stops progress and switches to appropriate party to prepare for stacking Briv's SteelBones.
     StackFarmSetup()
     {
-        if (!g_SF.KillCurrentBoss() ) ; Previously/Alternatively FallBackFromBossZone()
+        g_SF.LogMessage("Starting StackFarmSetup()")
+
+        if (!g_SF.KillCurrentBoss())
+        {
+            g_SF.LogMessage("KillCurrentBoss failed, falling back from boss zone")
             g_SF.FallBackFromBossZone()
+        }
+        else
+        {
+            g_SF.LogMessage("KillCurrentBoss successful")
+        }
+
         inputValues := g_SCKeyMap["w"] ; Stack farm formation hotkey
-        g_SF.DirectedInput(,, inputValues )
-        g_SF.WaitForTransition( inputValues )
-        g_SF.ToggleAutoProgress( 0 , false, true )
+        g_SF.LogMessage("Stack farm formation hotkey: " . inputValues)
+
+        g_SF.DirectedInput(,, inputValues)
+        g_SF.LogMessage("Directed input sent for stack farm formation")
+
+        g_SF.WaitForTransition(inputValues)
+        g_SF.LogMessage("Waited for transition")
+
+        g_SF.ToggleAutoProgress(0, false, true)
+        g_SF.LogMessage("Auto progress toggled off")
+
         StartTime := A_TickCount
         ElapsedTime := 0
         counter := 0
         sleepTime := 50
         g_SharedData.LoopString := "Setting stack farm formation."
+        g_SF.LogMessage("Starting formation setup loop")
+
         stackFormation := g_SF.Memory.GetFormationByFavorite(2)
-        while (!g_SF.IsCurrentFormation(stackFormation) AND ElapsedTime < 5000 )
+        g_SF.LogMessage("Stack formation retrieved: " . stackFormation)
+
+        while (!g_SF.IsCurrentFormation(stackFormation) AND ElapsedTime < 5000)
         {
             ElapsedTime := A_TickCount - StartTime
-            if (ElapsedTime > (counter * sleepTime)) ; input limiter..
+            if (ElapsedTime > (counter * sleepTime)) ; input limiter
             {
                 g_SF.DirectedInput(,,inputValues)
                 counter++
+                g_SF.LogMessage("Sent directed input. Attempt: " . counter)
             }
             this.BGFLU_DoPartySetupMax(stackFormation)
         }
-        while (!this.BGFLU_DoPartySetupMax(stackFormation) AND (A_TickCount - StartTime) < 5000)
+
+        if (ElapsedTime >= 5000)
+        {
+            g_SF.LogMessage("Formation setup loop timed out after 5000ms")
+        }
+        else
+        {
+            g_SF.LogMessage("Formation setup completed in " . ElapsedTime . "ms")
+        }
+
+        g_SF.LogMessage("Starting party setup max loop")
+        partySetupStartTime := A_TickCount
+        while (!this.BGFLU_DoPartySetupMax(stackFormation) AND (A_TickCount - partySetupStartTime) < 5000)
+        {
            Sleep, 30
+        }
+
+        partySetupElapsedTime := A_TickCount - partySetupStartTime
+        if (partySetupElapsedTime >= 5000)
+        {
+            g_SF.LogMessage("Party setup max loop timed out after 5000ms")
+        }
+        else
+        {
+            g_SF.LogMessage("Party setup max completed in " . partySetupElapsedTime . "ms")
+        }
+
+        g_SF.LogMessage("StackFarmSetup completed")
         return
     }
 

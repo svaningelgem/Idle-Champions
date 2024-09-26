@@ -2,7 +2,8 @@
 #include %A_LineFile%\..\SH_ArrFnc.ahk
 
 
-global g_LogFile := A_LineFile . "\..\..\StackFarmSetup.log"
+SplitPath, A_LineFile,, CurrentDir
+global g_LogFile := CurrentDir . "\..\StackFarmSetup.log"
 
 
 class SH_SharedFunctions
@@ -160,13 +161,19 @@ class SH_SharedFunctions
         ; g_KeyPresses := TestVar
     }
 
-    LogMessage(message)
+    LogMessage(message, maxRetries := 5, retryDelay := 30)
     {
         timeStamp := A_YYYY . "-" . A_MM . "-" . A_DD . " " . A_Hour . ":" . A_Min . ":" . A_Sec
-        FileAppend, %timeStamp% - %message%`n, %g_LogFile%
-        if (ErrorLevel)
+        logEntry := timeStamp . " - " . message . "`n"
+
+        Loop, %maxRetries%
         {
-            MsgBox, Error writing to log file: %g_LogFile%
+            FileAppend, %logEntry%, %g_LogFile%
+            if !ErrorLevel  ; If FileAppend was successful
+                return true
+            Sleep, %retryDelay%  ; Wait before retrying
         }
+
+        return false  ; Failed to write after all retries
     }
 }

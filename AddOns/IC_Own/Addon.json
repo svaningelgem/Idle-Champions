@@ -1,26 +1,14 @@
 {
     "Name":"Own plugin",
     "Version": "v1.0.0",
-    "Includes" : "",
+    "Includes" : "IC_BrivGemFarm_Component.ahk",
     "Author" : "svaningelgem",
     "Url" : "nope, nothing here",
     "Info" : "Gem farm improved (for me)",
     "Dependencies" : [
         {
-            "Name":"IC Core",
-            "Version":"v0.1.0"
-        },
-        {
-            "Name":"Briv Gem Farm",
-            "Version":"v1.4.7"
-        },
-        {
-            "Name":"RNG Waiting Room",
-            "Version":"v0.2.2"
-        },
-        {
-            "Name":"Briv Gem Farm Stats",
-            "Version":"v1.1.5"
+            "Name": "IC Core",
+            "Version": "v0.1.0"
         }
     ]
 }

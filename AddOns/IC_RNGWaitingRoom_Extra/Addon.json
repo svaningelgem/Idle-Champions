@@ -9,6 +9,10 @@
         {
             "Name":"IC Core",
             "Version":"v0.1.0"
+        },
+        {
+            "Name":"BrivGemFarm LevelUp",
+            "Version":"v1.3.4"
         }
     ]
 }

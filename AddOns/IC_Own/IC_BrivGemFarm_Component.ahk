@@ -1,4 +1,4 @@
-﻿MsgBox,, Error, Test message
+﻿;MsgBox,, Error, Test message
 
 ;Load user settings
 global g_BrivUserSettings := g_SF.LoadObjectFromJSON( A_LineFile . "\..\BrivGemFarmSettings.json" )
@@ -9,14 +9,12 @@ global g_BrivFarmAddonStartFunctions := {}
 global g_BrivFarmAddonStopFunctions := {}
 global g_BrivFarmLastRunMiniscripts := g_SF.LoadObjectFromJSON(A_LineFile . "\..\LastGUID_Miniscripts.json")
 
-#include %A_LineFile%\..\IC_BrivGemFarm_Settings.ahk
-FileCreateDir, % A_LineFile . "\..\Profiles"
-ReloadBrivGemFarmSettings(True)
-
 #include %A_LineFile%\..\GUI.ahk
 GemFarmGUI := new CombinedGemFarmGUI()
 GemFarmGUI.CreateGUI()
 
+
+/*
 
 
 
@@ -38,12 +36,8 @@ IC_BrivGemFarm_Component.Briv_Load_Profile_Clicked(g_BrivUserSettings["LastSetti
 IC_BrivGemFarm_Component.UpdateGUICheckBoxes()
 IC_BrivGemFarm_Component.BuildToolTips()
 IC_BrivGemFarm_Component.ResetModFile()
-Briv_Run_Clicked() {
-    IC_BrivGemFarm_Component.Briv_Run_Clicked()
-}
-Briv_Run_Stop_Clicked() {
-    IC_BrivGemFarm_Component.Briv_Run_Stop_Clicked()
-}
+
+
 Briv_Connect_Clicked() {
     IC_BrivGemFarm_Component.Briv_Connect_Clicked()
 }
@@ -58,21 +52,7 @@ Briv_Load_Profile_Clicked(controlID)
     IC_BrivGemFarm_Component.Briv_Load_Profile_Clicked(BrivDropDownSettings)
 }
 
-Briv_Visit_Byteglow_Speed_Avg_Stacks()
-{
-    IC_BrivGemFarm_Component.Briv_Visit_Byteglow_Speed("avg")
-}
 
-Briv_Visit_Byteglow_Speed_Max_Stacks()
-{
-    IC_BrivGemFarm_Component.Briv_Visit_Byteglow_Speed("max")
-}
-
-Briv_Visit_Byteglow_Speed_Link()
-{
-    byteglowURL := "http://ic.byteglow.com/speed"
-    Run % byteglowURL 
-}
 
 Briv_Save_Profile_Clicked()
 {
@@ -115,22 +95,6 @@ Briv_Delete_Profile_Clicked()
         IC_BrivGemFarm_Component.Briv_Load_Profiles_List()
         IC_BrivGemFarm_Component.Briv_Load_Profile_Clicked("Default")
     }
-}
-DisableBrivTargetStacksBox(g_BrivUserSettings[ "AutoCalculateBrivStacks" ])
-
-BrivAutoDetectStacks_Click()
-{
-    Gui, ICScriptHub:Submit, NoHide
-    isChecked := %A_GuiControl%
-    DisableBrivTargetStacksBox(isChecked)
-}
-
-DisableBrivTargetStacksBox(doDisable)
-{
-    if(doDisable)
-        GuiControl,ICScriptHub:Disable, NewTargetStacks
-    else
-        GuiControl,ICScriptHub:Enable, NewTargetStacks
 }
 
 GuiControl, Choose, ICScriptHub:ModronTabControl, BrivGemFarm
@@ -373,7 +337,7 @@ class IC_BrivGemFarm_Component
         this.UpdateStatus("Loading Settings...")
         g_BrivUserSettings = {}
         if(settings == "Default")
-            ReloadBrivGemFarmSettings(False)
+            ReloadBrivGemFarmSettings()
         else
             g_BrivUserSettings := g_SF.LoadObjectFromJSON( A_LineFile . "\..\Profiles\" . settings . "_Settings.json" )
         this.LastSelected := settings
@@ -383,7 +347,6 @@ class IC_BrivGemFarm_Component
         GuiControl, ICScriptHub:, DisableDashWaitCheck, % g_BrivUserSettings[ "DisableDashWait" ]
         GuiControl, ICScriptHub:, BrivAutoCalcStatsCheck, % g_BrivUserSettings[ "AutoCalculateBrivStacks" ]
         GuiControl, ICScriptHub:, BrivAutoCalcStatsWorstCaseCheck, % g_BrivUserSettings[ "AutoCalculateWorstCase" ]  
-        DisableBrivTargetStacksBox(g_BrivUserSettings[ "AutoCalculateBrivStacks" ])
         ; Load advanced settings.
         if(OptionSettingCheck_DoChestsContinuous != "")
             IC_BrivGemFarm_AdvancedSettings_Component.LoadAdvancedSettings()
@@ -496,3 +459,4 @@ class IC_BrivGemFarm_Component
 }
 
 #include %A_LineFile%\..\IC_BrivGemFarm_Functions.ahk
+*/

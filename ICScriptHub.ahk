@@ -38,7 +38,7 @@ global g_SCKeyMap:= {}
 KeyHelper.BuildVirtualKeysMap(g_KeyMap, g_SCKeyMap)
 global g_ServerCall
 global g_UserSettings := {}
-global g_TabControlHeight := 630
+global g_TabControlHeight := 724
 global g_TabControlWidth := 430
 global g_InputsSent := 0
 global g_TabList := ""

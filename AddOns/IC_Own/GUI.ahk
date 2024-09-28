@@ -1,4 +1,10 @@
-#include %A_LineFile%\..\IC_BrivGemFarm_Settings.ahk
+#include %A_LineFile%\..\..\..\SharedFunctions\SH_GUIFunctions.ahk
+
+g_TabControlHeight := Max(g_TabControlHeight, 500)
+g_TabControlWidth := Max(g_TabControlWidth, 485)
+
+global g_LeftAlign
+global g_DownAlign
 
 
 class CombinedGemFarmGUI {
@@ -20,8 +26,6 @@ class CombinedGemFarmGUI {
 
         Gui, ICScriptHub:Add, Button, x15 y+10 w50 h50 gBriv_Start_Clicked vBrivGemFarmPlayButton, Play
         Gui, ICScriptHub:Add, Button, x+15 w50 h50 gBriv_Stop_Clicked vBrivGemFarmStopButton, Stop
-        ;Gui, ICScriptHub:Add, Button, x+15 w50 h50 gBriv_Connect_Clicked vBrivGemFarmConnectButton, Connect
-        ;Gui, ICScriptHub:Add, Button, x+15 w50 h50 gBriv_Save_Clicked vBrivGemFarmSaveButton, Save
         Gui, ICScriptHub:Add, Text, x+15 y-10 w240 h30 vgBriv_Button_Status,
 
         Gui, ICScriptHub:Add, GroupBox, xs+10 y+110 w433 h66 vBrivFarm_Group Section, Briv Farm Settings
@@ -35,7 +39,7 @@ class CombinedGemFarmGUI {
 
         GUIFunctions.UseThemeTextColor()
 
-        Gui, ICScriptHub:Add, GroupBox, x15 y+30 w432 h155 vRNGWR_Group Section, Ellywick
+        Gui, ICScriptHub:Add, GroupBox, x15 y+30 w432 h155 vEllywick_Group Section, Ellywick
 
         Gui, ICScriptHub:Add, CheckBox, xs+10 yp+20 vEllywickGFEnabled gControlChanged, Enable Ellywick (gem farming)
         Gui, ICScriptHub:Add, CheckBox, xs+10 y+5 vEllywickGFGemKeepRedrawing gControlChanged, Keep redrawing
@@ -57,27 +61,29 @@ class CombinedGemFarmGUI {
 
         this.AddCurrentRunGroup()
         this.AddOncePerRunGroup()
-        this.AddBrivGemFarmStatsGroup()
-        this.AddEllywickStatsGroup()
     }
 
     ; Adds the current run group box to the stats tab under the reset button
     AddCurrentRunGroup()
     {
         global
+
         GuiControlGet, pos, ICScriptHub:Pos, Reset_Briv_Farm_Stats_Button
+
+        GUIFunctions.UseThemeTextColor()
+
         posY := posY + 25
         Gui, ICScriptHub:Font, w700
-        Gui, ICScriptHub:Add, GroupBox, x%posX% y%posY% w450 h140 vCurrentRunGroupID, Current `Run:
+        Gui, ICScriptHub:Add, GroupBox, x%posX% y%posY% w450 h185 vCurrentRunGroupID, Current `Run:
         Gui, ICScriptHub:Font, w400
 
         Gui, ICScriptHub:Font, w700
-        Gui, ICScriptHub:Add, Text, vLoopAlignID xp+15 yp+25 , `Loop:
+        Gui, ICScriptHub:Add, Text, vLoopAlignID xp+15 yp+20 , `Loop:
         GuiControlGet, pos, ICScriptHub:Pos, LoopAlignID
         g_LeftAlign := posX
         Gui, ICScriptHub:Add, Text, vLoopID x+2 w400, Not Started
         Gui, ICScriptHub:Font, w400
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Current Area Time (s):
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+7, Current Area Time (s):
         Gui, ICScriptHub:Add, Text, vdtCurrentLevelTimeID x+2 w200, ; % dtCurrentLevelTime
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Current `Run Time (min):
         Gui, ICScriptHub:Add, Text, vdtCurrentRunTimeID x+2 w50, ; % dtCurrentRunTime
@@ -86,8 +92,18 @@ class CombinedGemFarmGUI {
         Gui, ICScriptHub:Add, Text, vg_StackCountSBID x+2 w200, ; % g_StackCountSB
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Haste Stack `Count:
         Gui, ICScriptHub:Add, Text, vg_StackCountHID x+2 w200, ; % g_StackCountH
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Last Close Game Reason:
-        Gui, ICScriptHub:Add, Text, vLastCloseGameReasonID x+2 w300,
+
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% yp+25, Boss Levels Hit `This `Run:
+        Gui, ICScriptHub:Add, Text, vBossesHitThisRunID x+2 w200,
+
+        GUIFunctions.UseThemeTextColor("SpecialTextColor1", 700)
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+7, Calculated Target Stacks:
+        Gui, ICScriptHub:Add, Text, vCalculatedTargetStacksID x+2 w200,
+
+        GUIFunctions.UseThemeTextColor("SpecialTextColor2", 700)
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+5, Ellywick draws:
+        Gui, ICScriptHub:Add, Text, x+2 w200 vEllywick_Draws
+
         GUIFunctions.UseThemeTextColor()
     }
 
@@ -96,11 +112,14 @@ class CombinedGemFarmGUI {
     {
         global
         GuiControlGet, pos, ICScriptHub:Pos, CurrentRunGroupID
+
+        GUIFunctions.UseThemeTextColor()
+
         g_DownAlign := posY + posH -5
         Gui, ICScriptHub:Font, w700
         Gui, ICScriptHub:Add, GroupBox, x%posX% y%g_DownAlign% w450 h280 vOnceRunGroupID, Updated Once Per Full Run:
         Gui, ICScriptHub:Font, w400
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% yp+25, Previous Run Time (min):
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% yp+20, Previous Run Time (min):
         Gui, ICScriptHub:Add, Text, vPrevRunTimeID x+2 w50,
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Fastest Run Time (min):
         Gui, ICScriptHub:Add, Text, vFastRunTimeID x+2 w50,
@@ -116,15 +135,14 @@ class CombinedGemFarmGUI {
 
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+10, Silvers Gained:
         Gui, ICScriptHub:Add, Text, vSilversGainedID x+2 w200, 0
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Silvers Opened:
-        Gui, ICScriptHub:Add, Text, vSilversOpenedID x+2 w200, 0
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Golds Gained:
         Gui, ICScriptHub:Add, Text, vGoldsGainedID x+2 w200, 0
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Golds Opened:
-        Gui, ICScriptHub:Add, Text, vGoldsOpenedID x+2 w200, 0
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Shinies Found:
-        Gui, ICScriptHub:Add, Text, vShiniesID x+2 w200, 0
-        ShiniesClassNN := GUIFunctions.GetToolTipTarget("ShiniesID")
+
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Boss Levels Hit Since Start:
+        Gui, ICScriptHub:Add, Text, vTotalBossesHitID x+2 w200,
+
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, RollBacks Hit Since Start:
+        Gui, ICScriptHub:Add, Text, vTotalRollBacksID x+2 w200,
 
         GUIFunctions.UseThemeTextColor("SpecialTextColor1", 700)
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+10, Bosses per hour:
@@ -133,8 +151,12 @@ class CombinedGemFarmGUI {
         GUIFunctions.UseThemeTextColor("SpecialTextColor2", 700)
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+10, Total Gems:
         Gui, ICScriptHub:Add, Text, vGemsTotalID x+2 w200, ; % GemsTotal
+
         Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Gems per hour:
         Gui, ICScriptHub:Add, Text, vGemsPhrID x+2 w200, ; % GemsPhr
+
+        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+7, Ellywick bonus gems:
+        Gui, ICScriptHub:Add, Text, x+2 w200 vEllywick_BonusGems
 
         GUIFunctions.UseThemeTextColor("WarningTextColor", 700)
         GuiControlGet, pos, ICScriptHub:Pos, bossesPhrID
@@ -142,58 +164,7 @@ class CombinedGemFarmGUI {
         Gui, ICScriptHub:Add, Text, vNordomWarningID x%posX% y%posY% w265,
         GuiControlGet, pos, ICScriptHub:Pos, OnceRunGroupID
         g_DownAlign := g_DownAlign + posH -5
-        GUIFunctions.UseThemeTextColor()
-    }
 
-    ; Adds the briv gem farm stats group to the stats page below the current run group
-    AddBrivGemFarmStatsGroup()
-    {
-        global
-        Gui, ICScriptHub:Tab, Stats
-        GuiControlGet, pos, ICScriptHub:Pos, CurrentRunGroupID
-        Gui, ICScriptHub:Font, w700
-        Gui, ICScriptHub:Add, GroupBox, x%posX% y%g_DownAlign% w450 h125 vBrivGemFarmStatsID, BrivGemFarm Stats:
-        Gui, ICScriptHub:Font, w400
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% yp+25, Boss Levels Hit `This `Run:
-        Gui, ICScriptHub:Add, Text, vBossesHitThisRunID x+2 w200,
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Boss Levels Hit Since Start:
-        Gui, ICScriptHub:Add, Text, vTotalBossesHitID x+2 w200,
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, RollBacks Hit Since Start:
-        Gui, ICScriptHub:Add, Text, vTotalRollBacksID x+2 w200,
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Bad Autoprogression Since Start:
-        Gui, ICScriptHub:Add, Text, vBadAutoprogressesID x+2 w200,
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2, Calculated Target Stacks:
-        Gui, ICScriptHub:Add, Text, vCalculatedTargetStacksID x+2 w200,
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2 vHybridStatsCountTitle, ForceOfflineRunThreshold Count:
-        Gui, ICScriptHub:Add, Text, vHybridStatsCountValue x+2 w200,
-        GuiControlGet, pos, ICScriptHub:Pos, BrivGemFarmStatsID
-        g_DownAlign := g_DownAlign + posH -5
-        g_TabControlHeight := Max(g_TabControlHeight, 700)
-        GUIFunctions.RefreshTabControlSize()
-        GUIFunctions.UseThemeTextColor()
-    }
-
-    AddEllywickStatsGroup() {
-        global
-        Gui, ICScriptHub:Tab, Stats
-        GuiControlGet, pos, ICScriptHub:Pos, CurrentRunGroupID
-        Gui, ICScriptHub:Font, w700
-        Gui, ICScriptHub:Add, GroupBox, x%posX% y%g_DownAlign% w450 h100 vEllywickStatsID, Ellywick Stats:
-        Gui, ICScriptHub:Font, w400
-
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% yp+25 vRNGWR_RunsText, Runs:
-        Gui, ICScriptHub:Add, Text, x+2 w200 vRNGWR_Runs
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2 vRNGWR_SuccessText, Success rate:
-        Gui, ICScriptHub:Add, Text, x+2 w200 vRNGWR_Success
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2 vRNGWR_AvgBonusGemsText, Avg. gem bonus:
-        Gui, ICScriptHub:Add, Text, x+2 w200 vRNGWR_AvgBonusGems
-        Gui, ICScriptHub:Add, Text, x%g_LeftAlign% y+2 vRNGWR_AvgRedrawsText, Avg. redraws:
-        Gui, ICScriptHub:Add, Text, x+2 w200 vRNGWR_AvgRedraws
-
-        GuiControlGet, pos, ICScriptHub:Pos, EllywickStatsID
-        g_DownAlign := g_DownAlign + posH -5
-        g_TabControlHeight := Max(g_TabControlHeight, 700)
-        GUIFunctions.RefreshTabControlSize()
         GUIFunctions.UseThemeTextColor()
     }
 
@@ -222,9 +193,16 @@ class CombinedGemFarmGUI {
         GuiControl, ICScriptHub:, EllywickExpectedResults, % g_BrivUserSettings["EllywickExpectedResults"]
     }
 
-    UpdateGUI() {
+    BuildTooltips() {
         this.UpdateBrivSettings()
         this.UpdateEllywickSettings()
+        this.EnableTooltips()
+    }
+
+    BuildTooltips()
+    {
+        GUIFunctions.AddToolTip("BrivGemFarmPlayButton", "Start Gem Farm")
+        GUIFunctions.AddToolTip("BrivGemFarmStopButton", "Stop Gem Farm")
     }
 }
 
@@ -249,4 +227,3 @@ Reset_Briv_Farm_Stats()
 {
     g_BrivGemFarmStats.ResetBrivFarmStats()
 }
-

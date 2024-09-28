@@ -1,17 +1,5 @@
-﻿;MsgBox,, Error, Test message
-
-;Load user settings
-global g_BrivUserSettings := g_SF.LoadObjectFromJSON( A_LineFile . "\..\BrivGemFarmSettings.json" )
-global g_BrivFarm := new IC_BrivGemFarm_Class
-g_BrivFarm.GemFarmGUID := g_SF.LoadObjectFromJSON(A_LineFile . "\..\LastGUID_BrivGemFarm.json")
-global g_BrivFarmModLoc := A_LineFile . "\..\IC_BrivGemFarm_Mods.ahk"
-global g_BrivFarmAddonStartFunctions := {}
-global g_BrivFarmAddonStopFunctions := {}
-global g_BrivFarmLastRunMiniscripts := g_SF.LoadObjectFromJSON(A_LineFile . "\..\LastGUID_Miniscripts.json")
-
+﻿
 #include %A_LineFile%\..\GUI.ahk
-GemFarmGUI := new CombinedGemFarmGUI()
-GemFarmGUI.CreateGUI()
 
 
 /*
@@ -29,73 +17,7 @@ GemFarmGUI.CreateGUI()
 
 
 
-IC_BrivGemFarm_Component.ProfilesList := {}
-IC_BrivGemFarm_Component.ProfileLastSelected := "Default"
-IC_BrivGemFarm_Component.Briv_Load_Profiles_List()
-IC_BrivGemFarm_Component.Briv_Load_Profile_Clicked(g_BrivUserSettings["LastSettingsUsed"], fullLoad := false)
-IC_BrivGemFarm_Component.UpdateGUICheckBoxes()
-IC_BrivGemFarm_Component.BuildToolTips()
 IC_BrivGemFarm_Component.ResetModFile()
-
-
-Briv_Connect_Clicked() {
-    IC_BrivGemFarm_Component.Briv_Connect_Clicked()
-}
-Briv_Save_Clicked() {
-    IC_BrivGemFarm_Component.Briv_Save_Clicked()
-}
-
-Briv_Load_Profile_Clicked(controlID)
-{
-    Gui, Submit, NoHide
-    global BrivDropDownSettings
-    IC_BrivGemFarm_Component.Briv_Load_Profile_Clicked(BrivDropDownSettings)
-}
-
-
-
-Briv_Save_Profile_Clicked()
-{
-    Gui, Submit, NoHide
-    global BrivDropDownSettings
-    WinGetPos, xPos, yPos,,, 
-    InputBox, profileName, Choose a profile name, Profile Name:,, Width := 375, Height := 129, X := xPos, Y := yPos,,, %BrivDropDownSettings%
-    isCanceled := ErrorLevel
-    while ((!GUIFunctions.TestInputForAlphaNumericDash(profileName) AND !isCanceled) OR profileName == "Default")
-    {
-        if(profileName == "Default")
-            errMsg := "Can not use ""Default"" as a profile name."
-        else
-            errMsg := "Can only contain letters, numbers, and -."
-        InputBox, profileName, Choose a profile name, %errMsg%`nProfile Name:,, Width := 375, Height := 144, X := xPos, Y := yPos,
-        isCanceled := ErrorLevel
-    }
-    if(!isCanceled)
-    {
-        IC_BrivGemFarm_Component.Briv_Save_Clicked(profileName)
-        IC_BrivGemFarm_Component.BrivUserSettingsProfile := g_BrivUserSettings.Clone()
-        IC_BrivGemFarm_Component.Briv_Load_Profiles_List()
-    }
-}
-
-Briv_Delete_Profile_Clicked()
-{
-    Gui, Submit, NoHide
-    global BrivDropDownSettings
-    if(BrivDropDownSettings == "Default")
-    {
-        MsgBox,, Error, Cannot delete Default settings
-        return
-    }
-    FileName := A_LineFile . "..\..\Profiles\" . BrivDropDownSettings . "_Settings.json"
-    MsgBox 4,, Are you sure you want to delete the profile '%BrivDropDownSettings%'
-    IfMsgBox Yes
-    {
-        FileDelete, %FileName%
-        IC_BrivGemFarm_Component.Briv_Load_Profiles_List()
-        IC_BrivGemFarm_Component.Briv_Load_Profile_Clicked("Default")
-    }
-}
 
 GuiControl, Choose, ICScriptHub:ModronTabControl, BrivGemFarm
 
@@ -106,26 +28,6 @@ ClearBrivGemFarmStatusMessage()
 
 class IC_BrivGemFarm_Component
 {
-    ProfilesList := {}
-    ProfileLastSelected := "Default"
-
-    BuildTooltips()
-    {
-        GUIFunctions.AddToolTip("BrivGemFarmPlayButton", "Start Gem Farm")
-        GUIFunctions.AddToolTip("BrivGemFarmStopButton", "Stop Gem Farm")
-        GUIFunctions.AddToolTip("BrivGemFarmConnectButton", "Reconnect to Gem Farm Script. [If the stats have stopped updating, click this to start updating them again]")
-        GUIFunctions.AddToolTip("BrivGemFarmSaveButton", "Save settings for this session.")
-    }
-
-    UpdateGUICheckBoxes()
-    {
-        GuiControl,ICScriptHub:, FkeysCheck, % g_BrivUserSettings[ "Fkeys" ]
-        GuiControl,ICScriptHub:, StackFailRecoveryCheck, % g_BrivUserSettings[ "StackFailRecovery" ]
-        GuiControl,ICScriptHub:, DisableDashWaitCheck, % g_BrivUserSettings[ "DisableDashWait" ]
-        GuiControl,ICScriptHub:, BrivAutoCalcStatsCheck, % g_BrivUserSettings[ "AutoCalculateBrivStacks" ]
-        GuiControl,ICScriptHub:, BrivAutoCalcStatsWorstCaseCheck, % g_BrivUserSettings[ "AutoCalculateWorstCase" ]
-    }
-    
     Briv_Run_Clicked()
     {
         g_SF.WriteObjectToJSON(A_LineFile . "\..\LastGUID_Miniscripts.json", g_Miniscripts)
@@ -241,47 +143,6 @@ class IC_BrivGemFarm_Component
         GuiControl, ICScriptHub:Choose, ModronTabControl, Stats
     }
 
-    ;Saves Settings associated with BrivGemFarm
-    Briv_Save_Clicked(profile := "")
-    {
-        global
-        local k
-        local v
-        local k1
-        local v1
-        this.UpdateStatus("Saving Settings...")
-        Gui, ICScriptHub:Submit, NoHide
-        if(OptionSettingCheck_DoChestsContinuous != "")
-            IC_BrivGemFarm_AdvancedSettings_Component.SaveAdvancedSettings()
-        g_BrivUserSettings[ "Fkeys" ] := FkeysCheck
-        g_BrivUserSettings[ "StackFailRecovery" ] := StackFailRecoveryCheck
-        g_BrivUserSettings[ "TargetStacks" ] := StrReplace(NewTargetStacks, ",")
-        g_BrivUserSettings[ "DisableDashWait" ] := DisableDashWaitCheck
-        g_BrivUserSettings[ "AutoCalculateBrivStacks" ] := BrivAutoCalcStatsCheck
-        g_BrivUserSettings[ "AutoCalculateWorstCase" ] := BrivAutoCalcStatsWorstCaseCheck
-        g_BrivUserSettings[ "LastSettingsUsed" ] := profile? profile : BrivDropDownSettings
-        g_SF.WriteObjectToJSON( A_LineFile . "\..\BrivGemFarmSettings.json" , g_BrivUserSettings )
-        shouldIgnoreTimer := False
-        updateStatusMsg := "Save Complete."
-        if(profile != "" AND profile != "Default")
-        {
-            this.ProfileLastSelected := profile
-            updateStatusMsg := "Profile Save Complete."
-            g_SF.WriteObjectToJSON( A_LineFile . "\..\Profiles\" . profile . "_Settings.json" , g_BrivUserSettings )
-        }
-        else if (profile == "")
-        {
-            updateStatusMsg := this.TestSettingsMatchProfile(updateStatusMsg)
-        }
-        try ; avoid thrown errors when comobject is not available.
-        {
-            local SharedRunData := ComObjActive(g_BrivFarm.GemFarmGUID)
-            SharedRunData.ReloadSettings("RefreshSettingsView")
-        }
-        this.UpdateStatus(updateStatusMsg)
-        return
-    }
-
     ; Checks that current user settings match the currently selected profile's settings.
     TestSettingsMatchProfile(updateStatusMsg)
     {
@@ -309,89 +170,12 @@ class IC_BrivGemFarm_Component
         return updateStatusMsg
     }
 
-    ;Saves Settings associated with BrivGemFarm
-    Briv_Load_Profile_Clicked(settings := "Default", fullLoad := True)
-    {
-        global
-        if(settings == "")
-            return
-        ; GuiControl, ICScriptHub:ChooseString, BrivDropDownSettings, %settings%
-        Controlget, Row, FindString, %settings%, , ahk_id %BrivDropDownSettingsHWND% ; Docs: Sets OutputVar to the entry number of a ListBox or ComboBox that is an exact match for String.
-        GuiControl, ICScriptHub:Choose, BrivDropDownSettings, %Row%
-        if (!fullLoad)
-        {
-            this.BrivUserSettingsProfile := g_SF.LoadObjectFromJSON( A_LineFile . "\..\Profiles\" . settings . "_Settings.json" )
-            return
-        }
-        if(this.TestSettingsMatchProfile("") != "")
-        {
-            MsgBox 4,, There are unsaved changes to this profile. Are you sure you wish to load a new profile?
-            IfMsgBox No
-            {
-                lastSelected := g_BrivUserSettings[ "LastSettingsUsed" ] 
-                Controlget, Row, FindString, %lastSelected%, , ahk_id %BrivDropDownSettingsHWND% ; Docs: Sets OutputVar to the entry number of a ListBox or ComboBox that is an exact match for String.
-                GuiControl, ICScriptHub:Choose, BrivDropDownSettings, %Row%
-                return
-            }
-        }
-        this.UpdateStatus("Loading Settings...")
-        g_BrivUserSettings = {}
-        if(settings == "Default")
-            ReloadBrivGemFarmSettings()
-        else
-            g_BrivUserSettings := g_SF.LoadObjectFromJSON( A_LineFile . "\..\Profiles\" . settings . "_Settings.json" )
-        this.LastSelected := settings
-        GuiControl, ICScriptHub:, FkeysCheck, % g_BrivUserSettings[ "Fkeys" ]
-        GuiControl, ICScriptHub:, StackFailRecoveryCheck, % g_BrivUserSettings[ "StackFailRecovery" ]
-        GuiControl, ICScriptHub:, NewTargetStacks, % g_BrivUserSettings[ "TargetStacks" ]
-        GuiControl, ICScriptHub:, DisableDashWaitCheck, % g_BrivUserSettings[ "DisableDashWait" ]
-        GuiControl, ICScriptHub:, BrivAutoCalcStatsCheck, % g_BrivUserSettings[ "AutoCalculateBrivStacks" ]
-        GuiControl, ICScriptHub:, BrivAutoCalcStatsWorstCaseCheck, % g_BrivUserSettings[ "AutoCalculateWorstCase" ]  
-        ; Load advanced settings.
-        if(OptionSettingCheck_DoChestsContinuous != "")
-            IC_BrivGemFarm_AdvancedSettings_Component.LoadAdvancedSettings()
-        g_BrivUserSettings[ "LastSettingsUsed" ] := settings
-        this.BrivUserSettingsProfile := g_BrivUserSettings.Clone()
-        this.Briv_Save_Clicked(settings)
-        this.UpdateStatus("Load complete.")
-        return
-    }
-
-    Briv_Load_Profiles_List()
-    {
-        global BrivDropDownSettingsHWND
-        this.ProfilesList := {}
-        profileDDLString := "|Default|"
-        this.ProfilesList["Default"] := A_LineFile . "..\BrivGemFarmSettings.json"
-        Loop, Files, % A_LineFile . "\..\Profiles\*_Settings.json"
-        {
-            profileName := StrSplit(A_LoopFileName, "_")[1]
-            this.ProfilesList[profileName]:= A_LoopFileName
-            if(profileName != "")
-                profileDDLString .= profileName . "|"
-                
-        }
-        GuiControl, ICScriptHub:, BrivDropDownSettings, %profileDDLString%
-        lastSelected := this.ProfileLastSelected
-        Controlget, Row, FindString, %lastSelected%, , ahk_id %BrivDropDownSettingsHWND% ; Docs: Sets OutputVar to the entry number of a ListBox or ComboBox that is an exact match for String.
-        GuiControl, ICScriptHub:Choose, BrivDropDownSettings, %Row%
-        Gui, Submit, NoHide
-    }
-
-    ResetModFile()
-    {
-        IfExist, %g_BrivFarmModLoc%
-            FileDelete, %g_BrivFarmModLoc%
-        FileAppend, `;THIS FILE IS AUTOMATICALLY GENERATED BY BRIV GEM FARM PERFORMANCE ADDON`n, %g_BrivFarmModLoc%
-    }
-
     UpdateStatus(msg)
     {
         GuiControl, ICScriptHub:, gBriv_Button_Status, % msg
         SetTimer, ClearBrivGemFarmStatusMessage,-3000
     }
 
-    
     Briv_Visit_Byteglow_Speed(speedType := "avg")
     {
         if (!WinExist("ahk_exe " . g_UserSettings[ "ExeName" ]))

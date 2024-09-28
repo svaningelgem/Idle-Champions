@@ -1,10 +1,5 @@
 ReloadBrivGemFarmSettings()
 {
-    If !IsObject( g_BrivUserSettings )
-    {
-        g_BrivUserSettings := g_SF.LoadObjectFromJSON( A_LineFile . "\..\BrivGemFarmSettings.json" )
-    }
-
     if ( g_BrivUserSettings[ "Fkeys" ] == "" )
         g_BrivUserSettings[ "Fkeys" ] := 1
     if ( g_BrivUserSettings[ "StackFailRecovery" ] == "" )
@@ -53,3 +48,7 @@ ReloadBrivGemFarmSettings()
 
     g_SF.WriteObjectToJSON( A_LineFile . "\..\BrivGemFarmSettings.json" , g_BrivUserSettings )
 }
+
+
+global g_BrivUserSettings := g_SF.LoadObjectFromJSON( A_LineFile . "\..\BrivGemFarmSettings.json" )
+ReloadBrivGemFarmSettings()

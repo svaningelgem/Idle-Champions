@@ -874,5 +874,3 @@ global g_BrivFarmModLoc := A_LineFile . "\..\IC_BrivGemFarm_Mods.ahk"
 
 global g_BrivFarmAddonStartFunctions := {}
 global g_BrivFarmAddonStopFunctions := {}
-
-global g_BrivFarmLastRunMiniscripts := g_SF.LoadObjectFromJSON(A_LineFile . "\..\LastGUID_Miniscripts.json")

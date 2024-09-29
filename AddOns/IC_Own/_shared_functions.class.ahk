@@ -169,12 +169,11 @@ class IC_BrivSharedFunctions_Class extends IC_SharedFunctions_Class
 
     Close()
     {
-        if (g_SF.Memory.ReadCurrentZone() == "") ; Invalid game state
-            ExitApp
-        g_SF.WaitForTransition()
-        g_SF.FallBackFromZone()
-        g_SF.ToggleAutoProgress(false, false, true)
-        ExitApp
+        if (g_SF.Memory.ReadCurrentZone() != "") { ; Invalid game state
+            g_SF.WaitForTransition()
+            g_SF.FallBackFromZone()
+            g_SF.ToggleAutoProgress(false, false, true)
+        }
     }
 }
 

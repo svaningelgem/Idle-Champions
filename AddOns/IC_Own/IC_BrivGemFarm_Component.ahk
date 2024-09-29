@@ -26,42 +26,7 @@ class IC_BrivGemFarm_Component
 
     Briv_Run_Stop_Clicked()
     {
-        for k,v in g_BrivFarmAddonStopFunctions
-        {
-            this.UpdateStatus("Stopping Addon Function: " . v)
-            v.Call()
-        }
-        for k,v in g_Miniscripts
-        {
-            this.UpdateStatus("Stopping Miniscript: " . v)
-            try
-            {
-                SharedRunData := ComObjActive(k)
-                SharedRunData.Close()
-            }
-        }
-        for k,v in g_BrivFarmLastRunMiniscripts
-        {
-            try
-            {
-                SharedRunData := ComObjActive(k)
-                SharedRunData.Close()
-            }
-        }
-        this.UpdateStatus("Closing Gem Farm")
-        try
-        {
-            SharedRunData := ComObjActive(g_BrivFarm.GemFarmGUID)
-            SharedRunData.Close()
-        }
-        catch, err
-        {
-            ; When the Close() function is called "0x800706BE - The remote procedure call failed." is thrown even though the function successfully executes.
-            if(err.Message != "0x800706BE - The remote procedure call failed.")
-                this.UpdateStatus("Gem Farm not running")
-            else
-                this.UpdateStatus("Gem Farm Stopped")
-        }
+
     }
 
     ; Checks that current user settings match the currently selected profile's settings.

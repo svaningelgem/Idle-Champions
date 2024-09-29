@@ -17,6 +17,18 @@ class Runner {
         }
     }
 
+    StopMiniScripts() {
+        for k,v in g_Miniscripts
+        {
+            this.UpdateStatus("Stopping Miniscript: " . v)
+            try
+            {
+                SharedRunData := ComObjActive(k)
+                SharedRunData.Close()
+            }
+        }
+    }
+
     UpdateGUIDFromLast()
     {
         g_BrivFarm.GemFarmGUID := g_SF.LoadObjectFromJSON(A_LineFile . "\..\LastGUID_BrivGemFarm.json")
@@ -40,6 +52,15 @@ class Runner {
     StartAddons() {
         for k,v in g_BrivFarmAddonStartFunctions
         {
+            this.UpdateStatus("Starting Addon Function: " . v)
+            v.Call()
+        }
+    }
+
+    StopAddons() {
+        for k,v in g_BrivFarmAddonStopFunctions
+        {
+            this.UpdateStatus("Stopping Addon Function: " . v)
             v.Call()
         }
     }
@@ -49,9 +70,25 @@ class Runner {
         this.SwitchToStatsTab()
         this.TestGameVersion()
         this.UpdateStatus("Starting up")
+        this.StopMiniScripts()  ; Stop last run miniscripts (if any)
         this.StartMiniScripts()
         this.ConnectToEXE()
         this.StartAddons()
+    }
+
+    Briv_Run_Stop_Clicked() {
+        this.StopAddons()
+        this.StopMiniScripts()
+        this.UpdateStatus("Closing Gem Farm")
+        try
+        {
+            g_SF.Close()
+            this.UpdateStatus("Gem Farm Stopped")
+        }
+        catch, err
+        {
+            this.UpdateStatus("Error stopping gem farm: " . err.Message)
+        }
     }
 
     TestGameVersion()

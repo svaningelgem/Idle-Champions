@@ -33,6 +33,8 @@ class CombinedGemFarmGUI {
 
         Gui, ICScriptHub:Add, Checkbox, xs+10 ys+20 vFkeys gControlChanged, Level Champions with Fkeys?
         Gui, ICScriptHub:Add, Checkbox, xs+10 y+5 vDisableDashWait gControlChanged, Disable Dash Wait?
+
+        GuiControl, ICScriptHub:Disable, BrivGemFarmStopButton
     }
 
     AddEllywickRNGWaitingRoomSection() {
@@ -215,14 +217,6 @@ ControlChanged()
     g_BrivUserSettings[ A_GuiControl ] := %A_GuiControl%
 
     ReloadBrivGemFarmSettings()
-}
-
-Briv_Start_Clicked() {
-;    IC_BrivGemFarm_Component.Briv_Run_Clicked()
-}
-
-Briv_Stop_Clicked() {
-;    IC_BrivGemFarm_Component.Briv_Run_Stop_Clicked()
 }
 
 Reset_Briv_Farm_Stats()

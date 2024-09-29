@@ -869,7 +869,6 @@ class IC_BrivGemFarm_Class
 }
 
 global g_BrivFarm := new IC_BrivGemFarm_Class
-g_BrivFarm.GemFarmGUID := g_SF.LoadObjectFromJSON(A_LineFile . "\..\LastGUID_BrivGemFarm.json")
 
 global g_BrivFarmModLoc := A_LineFile . "\..\IC_BrivGemFarm_Mods.ahk"
 

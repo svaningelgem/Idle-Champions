@@ -17,69 +17,12 @@
 
 
 
-IC_BrivGemFarm_Component.ResetModFile()
-
 GuiControl, Choose, ICScriptHub:ModronTabControl, BrivGemFarm
 
-ClearBrivGemFarmStatusMessage()
-{
-    IC_BrivGemFarm_Component.UpdateStatus("")
-}
 
 class IC_BrivGemFarm_Component
 {
-    Briv_Run_Clicked()
-    {
-        g_SF.WriteObjectToJSON(A_LineFile . "\..\LastGUID_Miniscripts.json", g_Miniscripts)
-        for k,v in g_Miniscripts
-        {
-            try
-            {
-                this.UpdateStatus("Starting Miniscript: " . v)
-                Run, %A_AhkPath% "%v%" "%k%"
-            }
-        }
-        try
-        {
-            Briv_Connect_Clicked()
-            SharedData := ComObjActive(g_BrivFarm.GemFarmGUID)
-            SharedData.ShowGui()
-        }
-        catch
-        {
-            ;g_BrivGemFarm.GemFarm()
-            g_SF.Hwnd := WinExist("ahk_exe " . g_userSettings[ "ExeName"])
-            g_SF.Memory.OpenProcessReader()
-            scriptLocation := A_LineFile . "\..\IC_BrivGemFarm_Run.ahk"
-            GuiControl, ICScriptHub:Choose, ModronTabControl, Stats
-            for k,v in g_BrivFarmAddonStartFunctions
-            {
-                v.Call()
-            }
-            GuidCreate := ComObjCreate("Scriptlet.TypeLib")
-            g_BrivFarm.GemFarmGUID := guid := GuidCreate.Guid
-            Run, %A_AhkPath% "%scriptLocation%" "%guid%"
-        }
-        this.TestGameVersion()
-    }
 
-    UpdateGUIDFromLast()
-    {
-        g_BrivFarm.GemFarmGUID := g_SF.LoadObjectFromJSON(A_LineFile . "\..\LastGUID_BrivGemFarm.json")
-    }
-
-    TestGameVersion()
-    {
-        gameVersion := g_SF.Memory.ReadGameVersion()
-        importsVersion := _MemoryManager.is64bit ? g_ImportsGameVersion64 . g_ImportsGameVersionPostFix64 : g_ImportsGameVersion32 . g_ImportsGameVersionPostFix32
-        GuiControl, ICScriptHub: +cF18500, Warning_Imports_Bad, 
-        if (gameVersion == "")
-            GuiControl, ICScriptHub:, Warning_Imports_Bad, % "⚠ Warning: Memory Read Failure. Check for updated Imports."
-        else if( gameVersion > 100 AND gameVersion <= 999 AND gameVersion != importsVersion )
-            GuiControl, ICScriptHub:, Warning_Imports_Bad, % "⚠ Warning: Game version (" . gameVersion . ") does not match Imports version (" . importsVersion . ")."
-        else
-            GuiControl, ICScriptHub:, Warning_Imports_Bad, % ""
-    }
 
     Briv_Run_Stop_Clicked()
     {
@@ -121,28 +64,6 @@ class IC_BrivGemFarm_Component
         }
     }
 
-    Briv_Connect_Clicked()
-    {   
-        this.UpdateStatus("Connecting to Gem Farm...") 
-        this.UpdateGUIDFromLast()
-        Try 
-        {
-            ComObjActive(g_BrivFarm.GemFarmGUID)
-        }
-        Catch
-        {
-            this.UpdateStatus("Gem Farm not running.") 
-            return
-        }
-        g_SF.Hwnd := WinExist("ahk_exe " . g_userSettings[ "ExeName"])
-        g_SF.Memory.OpenProcessReader()
-        for k,v in g_BrivFarmAddonStartFunctions
-        {
-            v.Call()
-        }
-        GuiControl, ICScriptHub:Choose, ModronTabControl, Stats
-    }
-
     ; Checks that current user settings match the currently selected profile's settings.
     TestSettingsMatchProfile(updateStatusMsg)
     {
@@ -170,11 +91,6 @@ class IC_BrivGemFarm_Component
         return updateStatusMsg
     }
 
-    UpdateStatus(msg)
-    {
-        GuiControl, ICScriptHub:, gBriv_Button_Status, % msg
-        SetTimer, ClearBrivGemFarmStatusMessage,-3000
-    }
 
     Briv_Visit_Byteglow_Speed(speedType := "avg")
     {

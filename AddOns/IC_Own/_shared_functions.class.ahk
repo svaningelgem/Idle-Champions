@@ -166,6 +166,16 @@ class IC_BrivSharedFunctions_Class extends IC_SharedFunctions_Class
         g_PreviousZoneStartTime := A_TickCount
         return
     }
+
+    Close()
+    {
+        if (g_SF.Memory.ReadCurrentZone() == "") ; Invalid game state
+            ExitApp
+        g_SF.WaitForTransition()
+        g_SF.FallBackFromZone()
+        g_SF.ToggleAutoProgress(false, false, true)
+        ExitApp
+    }
 }
 
 global g_SF := new IC_BrivSharedFunctions_Class ; includes MemoryFunctions in g_SF.Memory

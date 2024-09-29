@@ -28,3 +28,20 @@ CoordMode, Mouse, Client
 
 GemFarmGUI := new CombinedGemFarmGUI()
 GemFarmGUI.CreateGUI()
+
+
+#include %A_LineFile%\..\_runner.ahk
+
+Briv_Start_Clicked() {
+    GuiControl, ICScriptHub:Disable, BrivGemFarmPlayButton
+    GuiControl, ICScriptHub:Enable, BrivGemFarmStopButton
+
+    Runner.Briv_Run_Clicked()
+}
+
+Briv_Stop_Clicked() {
+    GuiControl, ICScriptHub:Enable, BrivGemFarmPlayButton
+    GuiControl, ICScriptHub:Disable, BrivGemFarmStopButton
+
+    Runner.Briv_Run_Stop_Clicked()
+}

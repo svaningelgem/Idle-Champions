@@ -1,4 +1,5 @@
 #include %A_LineFile%\..\..\..\SharedFunctions\SH_GUIFunctions.ahk
+#include %A_LineFile%\..\_settings.ahk
 
 g_TabControlHeight := Max(g_TabControlHeight, 500)
 g_TabControlWidth := Max(g_TabControlWidth, 485)
@@ -174,10 +175,12 @@ class CombinedGemFarmGUI {
         this.AddBrivFarmSection()
         this.AddEllywickRNGWaitingRoomSection()
 
-        this.UpdateGUI()
+        this.UpdateSettings()
 
         this.CreateTab("Stats")
         this.addStats()
+
+        this.EnableTooltips()
     }
 
     UpdateBrivSettings() {
@@ -193,13 +196,12 @@ class CombinedGemFarmGUI {
         GuiControl, ICScriptHub:, EllywickExpectedResults, % g_BrivUserSettings["EllywickExpectedResults"]
     }
 
-    BuildTooltips() {
+    UpdateSettings() {
         this.UpdateBrivSettings()
         this.UpdateEllywickSettings()
-        this.EnableTooltips()
     }
 
-    BuildTooltips()
+    EnableTooltips()
     {
         GUIFunctions.AddToolTip("BrivGemFarmPlayButton", "Start Gem Farm")
         GUIFunctions.AddToolTip("BrivGemFarmStopButton", "Stop Gem Farm")

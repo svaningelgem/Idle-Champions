@@ -1,7 +1,7 @@
 {
     "Name":"Own plugin",
     "Version": "v1.0.0",
-    "Includes" : "IC_BrivGemFarm_Component.ahk",
+    "Includes" : "main.ahk",
     "Author" : "svaningelgem",
     "Url" : "nope, nothing here",
     "Info" : "Gem farm improved (for me)",

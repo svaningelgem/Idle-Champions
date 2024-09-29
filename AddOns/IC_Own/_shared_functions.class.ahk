@@ -170,9 +170,11 @@ class IC_BrivSharedFunctions_Class extends IC_SharedFunctions_Class
     Close()
     {
         if (g_SF.Memory.ReadCurrentZone() != "") { ; Invalid game state
-            g_SF.WaitForTransition()
-            g_SF.FallBackFromZone()
-            g_SF.ToggleAutoProgress(false, false, true)
+            ; By default it does this: but why would I want to stop the progression?
+            ;   --> Just don't change the current state, we'll have to make sure it starts OK
+            ;g_SF.WaitForTransition()
+            ;g_SF.FallBackFromZone()
+            ;g_SF.ToggleAutoProgress(false, false, true)
         }
     }
 }

@@ -134,10 +134,10 @@ class IC_BrivSharedFunctions_Class extends IC_SharedFunctions_Class
     {
         if !(this.Memory.ReadCurrentZone() >= 0 AND this.Memory.ReadCurrentZone() <= 3)
             return False
+
         rushStacks := ActiveEffectKeySharedFunctions.Thellora.ThelloraPlateausOfUnicornRunHandler.ReadRushStacks()
-        if !(rushStacks > 0 AND rushStacks < 10000)
-            return False
-        return True
+
+        return 0 < rushStacks AND rushStacks < 10000
     }
 
     DoRushWait()

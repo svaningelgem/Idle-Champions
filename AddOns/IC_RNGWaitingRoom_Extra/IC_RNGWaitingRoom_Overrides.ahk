@@ -17,8 +17,10 @@ class IC_RNGWaitingRoom_Class extends IC_BrivGemFarm_Class
         g_ServerCall.UpdatePlayServer()
         g_SF.ResetServerCall()
         g_SF.PatronID := g_SF.Memory.ReadPatronID()
+//TODO: remove reliance on 'StackZone'
         this.LastStackSuccessArea := g_UserSettings [ "StackZone" ]
         this.StackFailAreasThisRunTally := {}
+//TODO: remove reliance on 'StackZone'
         g_SF.GameStartFormation := g_BrivUserSettings[ "BrivJumpBuffer" ] > 0 ? 3 : 1
         g_SaveHelper.Init() ; slow call, loads briv dictionary (3+s)
         formationModron := g_SF.Memory.GetActiveModronFormation()

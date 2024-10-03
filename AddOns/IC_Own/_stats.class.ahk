@@ -28,7 +28,7 @@ class IC_BrivGemFarm_Stats_Component
     GemsTotal := 0
     SbLastStacked := ""
     
-    SharedRunData[]
+    g_SharedData[]
     {
         get 
         {
@@ -60,7 +60,7 @@ class IC_BrivGemFarm_Stats_Component
         static hasteStackMessage := ""
         static LastTriggerStart := false
 
-        TriggerStart := IsObject(this.SharedRunData) ? this.SharedRunData.TriggerStart : LastTriggerStart
+        TriggerStart := IsObject(this.g_SharedData) ? this.g_SharedData.TriggerStart : LastTriggerStart
         Critical, On
         currentZone := g_SF.Memory.ReadCurrentZone()
         if ( g_SF.Memory.ReadResetsCount() > lastResetCount OR (g_SF.Memory.ReadResetsCount() == 0 AND g_SF.Memory.ReadAreaActive() AND lastResetCount != 0 ) OR (TriggerStart AND LastTriggerStart != TriggerStart)) ; Modron or Manual reset happend
@@ -119,8 +119,8 @@ class IC_BrivGemFarm_Stats_Component
 
         dtCurrentLevelTime := Round( ( A_TickCount - previousZoneStartTime ) / 1000, 2 )
         GuiControl, ICScriptHub:, dtCurrentLevelTimeID, % dtCurrentLevelTime
-        if(IsObject(this.SharedRunData))
-            GuiControl, ICScriptHub:, LastCloseGameReasonID, % this.SharedRunData.LastCloseReason
+        if(IsObject(this.g_SharedData))
+            GuiControl, ICScriptHub:, LastCloseGameReasonID, % this.g_SharedData.LastCloseReason
         Critical, Off
     }
 
@@ -128,7 +128,7 @@ class IC_BrivGemFarm_Stats_Component
     UpdateStartLoopStats()
     {
         ; Do not calculate stacks if game/script do not appear to be in a normal state.
-        if(!IsObject(this.SharedRunData) OR this.SharedRunData.LoopString != "Main Loop") 
+        if(!IsObject(this.g_SharedData) OR this.g_SharedData.LoopString != "Main Loop") 
             return
         Critical, On
         if !this.isStarted
@@ -137,11 +137,11 @@ class IC_BrivGemFarm_Stats_Component
             this.isStarted := true
         }
 
-        this.StackFail := Max(this.StackFail, IsObject(this.SharedRunData) ? this.SharedRunData.StackFail : 0)
-        this.TriggerStart := IsObject(this.SharedRunData) ? this.SharedRunData.TriggerStart : this.LastTriggerStart
+        this.StackFail := Max(this.StackFail, IsObject(this.g_SharedData) ? this.g_SharedData.StackFail : 0)
+        this.TriggerStart := IsObject(this.g_SharedData) ? this.g_SharedData.TriggerStart : this.LastTriggerStart
         if ( g_SF.Memory.ReadResetsCount() > this.LastResetCount OR (g_SF.Memory.ReadResetsCount() == 0 AND g_SF.Memory.ReadOfflineDone() AND this.LastResetCount != 0 ) OR (this.TriggerStart AND this.LastTriggerStart != this.TriggerStart) )
         {
-            while(!g_SF.Memory.ReadOfflineDone() AND IsObject(this.SharedRunData) AND this.SharedRunData.TriggerStart)
+            while(!g_SF.Memory.ReadOfflineDone() AND IsObject(this.g_SharedData) AND this.g_SharedData.TriggerStart)
             {
                 Critical, Off
                 Sleep, 50
@@ -164,10 +164,10 @@ class IC_BrivGemFarm_Stats_Component
                 this.GoldChestCountStart := (goldChests != "") ? goldChests : 0
                 
                 ; start count after first run since total chest count is counted after first run
-                if(IsObject(this.SharedRunData)) 
+                if(IsObject(this.g_SharedData)) 
                 {
-                    this.SharedRunData.PurchasedGoldChests := 0
-                    this.SharedRunData.PurchasedSilverChests := 0    
+                    this.g_SharedData.PurchasedGoldChests := 0
+                    this.g_SharedData.PurchasedSilverChests := 0    
                 }
                 
                 this.FastRunTime := 1000
@@ -195,8 +195,8 @@ class IC_BrivGemFarm_Stats_Component
                 GuiControl, ICScriptHub:, FailRunTimeID, % this.PreviousRunTime
                 this.FailRunTime += this.PreviousRunTime
                 GuiControl, ICScriptHub:, TotalFailRunTimeID, % round( this.FailRunTime, 2 )
-                if(IsObject(this.SharedRunData))
-                    GuiControl, ICScriptHub:, FailedStackingID, % ArrFnc.GetDecFormattedArrayString(this.SharedRunData.StackFailStats.TALLY)
+                if(IsObject(this.g_SharedData))
+                    GuiControl, ICScriptHub:, FailedStackingID, % ArrFnc.GetDecFormattedArrayString(this.g_SharedData.StackFailStats.TALLY)
             }
 
             GuiControl, ICScriptHub:, TotalRunCountID, % this.TotalRunCount
@@ -238,34 +238,34 @@ class IC_BrivGemFarm_Stats_Component
             currentSilverChests := g_SF.Memory.ReadChestCountByID(1) ; Start + Purchased + Dropped - Opened
             currentGoldChests := g_SF.Memory.ReadChestCountByID(2)
 
-            if (IsObject(this.SharedRunData))
+            if (IsObject(this.g_SharedData))
             {
-                GuiControl, ICScriptHub:, SilversGainedID, % currentSilverChests - this.SilverChestCountStart + this.SharedRunData.OpenedSilverChests ; current - Start + Opened = Purchased + Dropped
-                GuiControl, ICScriptHub:, GoldsGainedID, % currentGoldChests - this.GoldChestCountStart + this.SharedRunData.OpenedGoldChests
-                GuiControl, ICScriptHub:, SilversOpenedID, % this.SharedRunData.OpenedSilverChests
-                GuiControl, ICScriptHub:, GoldsOpenedID, % this.SharedRunData.OpenedGoldChests
+                GuiControl, ICScriptHub:, SilversGainedID, % currentSilverChests - this.SilverChestCountStart + this.g_SharedData.OpenedSilverChests ; current - Start + Opened = Purchased + Dropped
+                GuiControl, ICScriptHub:, GoldsGainedID, % currentGoldChests - this.GoldChestCountStart + this.g_SharedData.OpenedGoldChests
+                GuiControl, ICScriptHub:, SilversOpenedID, % this.g_SharedData.OpenedSilverChests
+                GuiControl, ICScriptHub:, GoldsOpenedID, % this.g_SharedData.OpenedGoldChests
                 global ShiniesClassNN
                 g_MouseToolTips[ShiniesClassNN] := this.GetShinyCountTooltip()
-                GuiControl, ICScriptHub:, ShiniesID, % this.SharedRunData.ShinyCount
+                GuiControl, ICScriptHub:, ShiniesID, % this.g_SharedData.ShinyCount
             }
             ++this.TotalRunCount
             this.StackFail := 0
-            this.SharedRunData.StackFail := false
-            this.SharedRunData.TriggerStart := false
+            this.g_SharedData.StackFail := false
+            this.g_SharedData.TriggerStart := false
             this.RunStartTime := A_TickCount
         }
-        if (IsObject(this.SharedRunData))
-            this.LastTriggerStart := this.SharedRunData.TriggerStart
+        if (IsObject(this.g_SharedData))
+            this.LastTriggerStart := this.g_SharedData.TriggerStart
         Critical, Off
     }
 
     ; Returns a string listing shinies found by champion.
     GetShinyCountTooltip()
     {
-        if (IsObject(this.SharedRunData))
+        if (IsObject(this.g_SharedData))
         {
             shnieisByChampString := ""
-            shiniesJson := this.SharedRunData.ShiniesByChampJson
+            shiniesJson := this.g_SharedData.ShiniesByChampJson
             shiniesByChamp := JSON.parse(shiniesJson)
             for champID, slots in shiniesByChamp
             {
@@ -293,36 +293,22 @@ class IC_BrivGemFarm_Stats_Component
     ; Updates data on the stats tab page that is collected from the Briv Gem Farm script.
     UpdateGUIFromCom()
     {
-        static SharedRunData
         ;activeObjects := GetActiveObjects()
         try ; avoid thrown errors when comobject is not available.
         {
-            SharedRunData := ComObjActive(g_BrivFarm.GemFarmGUID)
             textColor := Format("{:#x}", GUIFunctions.CurrentTheme["HeaderTextColor"])
             GuiControl, ICScriptHub: +c%textColor%, LoopID, 
-            GuiControl, ICScriptHub:, LoopID, % SharedRunData.LoopString
-            GuiControl, ICScriptHub:, BossesHitThisRunID, % SharedRunData.BossesHitThisRun
-            GuiControl, ICScriptHub:, TotalBossesHitID, % SharedRunData.TotalBossesHit
-            GuiControl, ICScriptHub:, TotalRollBacksID, % SharedRunData.TotalRollBacks
-            GuiControl, ICScriptHub:, BadAutoprogressesID, % SharedRunData.BadAutoProgress
-            GuiControl, ICScriptHub:, CalculatedTargetStacksID, % SharedRunData.TargetStacks
-            runsMax := g_BrivUserSettings[ "ForceOfflineRunThreshold" ]
-            if (runsMax > 1)
-            {
-                GuiControl, ICScriptHub:, HybridStatsCountTitle, ForceOfflineRunThreshold Count:
-                GuiControl, ICScriptHub:, HybridStatsCountValue, % Mod( g_SF.Memory.ReadResetsCount(), runsMax )
-            }
-            else
-            {
-                GuiControl, ICScriptHub:, HybridStatsCountTitle,  
-                GuiControl, ICScriptHub:, HybridStatsCountValue,  
-            }
+            GuiControl, ICScriptHub:, LoopID, % g_SharedData.LoopString
+            GuiControl, ICScriptHub:, BossesHitThisRunID, % g_SharedData.BossesHitThisRun
+            GuiControl, ICScriptHub:, TotalBossesHitID, % g_SharedData.TotalBossesHit
+            GuiControl, ICScriptHub:, TotalRollBacksID, % g_SharedData.TotalRollBacks
+            GuiControl, ICScriptHub:, CalculatedTargetStacksID, % g_SharedData.TargetStacks
         }
-        catch
+        catch, err
         {
             textColor := Format("{:#x}", GUIFunctions.CurrentTheme["ErrorTextColor"])
             GuiControl, ICScriptHub: +c%textColor%, LoopID, 
-            GuiControl, ICScriptHub:, LoopID, % "Error reading from gem farm script [Closed Script?]."
+            GuiControl, ICScriptHub:, LoopID, % "Error reading from gem farm script [" . err.Message . "]"
         }
     }
 
@@ -345,20 +331,19 @@ class IC_BrivGemFarm_Stats_Component
     {
         try ; avoid thrown errors when comobject is not available.
         {
-            SharedRunData := ComObjActive(g_BrivFarm.GemFarmGUID)
-            SharedRunData.StackFailStats := new StackFailStates
-            SharedRunData.LoopString := ""
-            SharedRunData.TotalBossesHit := 0
-            SharedRunData.BossesHitThisRun := 0
-            SharedRunData.SwapsMadeThisRun := 0
-            SharedRunData.StackFail := 0
-            SharedRunData.OpenedSilverChests := 0
-            SharedRunData.OpenedGoldChests := 0
-            SharedRunData.PurchasedGoldChests := 0
-            SharedRunData.PurchasedSilverChests := 0
-            SharedRunData.ShinyCount := 0
-            SharedRunData.TotalRollBacks := 0
-            SharedRunData.BadAutoProgress := 0
+            g_SharedData.StackFailStats := new StackFailStates
+            g_SharedData.LoopString := ""
+            g_SharedData.TotalBossesHit := 0
+            g_SharedData.BossesHitThisRun := 0
+            g_SharedData.SwapsMadeThisRun := 0
+            g_SharedData.StackFail := 0
+            g_SharedData.OpenedSilverChests := 0
+            g_SharedData.OpenedGoldChests := 0
+            g_SharedData.PurchasedGoldChests := 0
+            g_SharedData.PurchasedSilverChests := 0
+            g_SharedData.ShinyCount := 0
+            g_SharedData.TotalRollBacks := 0
+            g_SharedData.BadAutoProgress := 0
         }
     }
 
@@ -376,19 +361,19 @@ class IC_BrivGemFarm_Stats_Component
         GuiControl, ICScriptHub:, bossesPhrID, % this.BossesPerHour
         GuiControl, ICScriptHub:, GemsTotalID, % this.GemsTotal
         GuiControl, ICScriptHub:, GemsPhrID, % Round( this.GemsTotal / dtTotalTime, 2 )
-        if(IsObject(this.SharedRunData))
+        if(IsObject(this.g_SharedData))
         {
-            GuiControl, ICScriptHub:, FailedStackingID, % ArrFnc.GetDecFormattedArrayString(this.SharedRunData.StackFailStats.TALLY)
-            GuiControl, ICScriptHub:, SilversGainedID, % this.SharedRunData.PurchasedSilverChests
-            GuiControl, ICScriptHub:, GoldsGainedID, % this.SharedRunData.PurchasedGoldChests
-            GuiControl, ICScriptHub:, SilversOpenedID, % this.SharedRunData.OpenedSilverChests
-            GuiControl, ICScriptHub:, GoldsOpenedID, % this.SharedRunData.OpenedGoldChests
-            GuiControl, ICScriptHub:, ShiniesID, % this.SharedRunData.ShinyCount
-            GuiControl, ICScriptHub:, SwapsMadeThisRunID, % this.SharedRunData.SwapsMadeThisRun
-            GuiControl, ICScriptHub:, BossesHitThisRunID, % this.SharedRunData.BossesHitThisRun
-            GuiControl, ICScriptHub:, TotalBossesHitID, % this.SharedRunData.TotalBossesHit
-            GuiControl, ICScriptHub:, TotalRollBacksID, % this.SharedRunData.TotalRollBacks
-            GuiControl, ICScriptHub:, BadAutoProgressID, % this.SharedRunData.BadAutoProgress
+            GuiControl, ICScriptHub:, FailedStackingID, % ArrFnc.GetDecFormattedArrayString(this.g_SharedData.StackFailStats.TALLY)
+            GuiControl, ICScriptHub:, SilversGainedID, % this.g_SharedData.PurchasedSilverChests
+            GuiControl, ICScriptHub:, GoldsGainedID, % this.g_SharedData.PurchasedGoldChests
+            GuiControl, ICScriptHub:, SilversOpenedID, % this.g_SharedData.OpenedSilverChests
+            GuiControl, ICScriptHub:, GoldsOpenedID, % this.g_SharedData.OpenedGoldChests
+            GuiControl, ICScriptHub:, ShiniesID, % this.g_SharedData.ShinyCount
+            GuiControl, ICScriptHub:, SwapsMadeThisRunID, % this.g_SharedData.SwapsMadeThisRun
+            GuiControl, ICScriptHub:, BossesHitThisRunID, % this.g_SharedData.BossesHitThisRun
+            GuiControl, ICScriptHub:, TotalBossesHitID, % this.g_SharedData.TotalBossesHit
+            GuiControl, ICScriptHub:, TotalRollBacksID, % this.g_SharedData.TotalRollBacks
+            GuiControl, ICScriptHub:, BadAutoProgressID, % this.g_SharedData.BadAutoProgress
         }
         else
         {

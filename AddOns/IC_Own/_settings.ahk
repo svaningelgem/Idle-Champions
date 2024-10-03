@@ -26,8 +26,6 @@ ReloadBrivGemFarmSettings()
         g_BrivUserSettings[ "ForceOfflineRunThreshold" ] := 0
     if ( g_BrivUserSettings[ "ManualBrivJumpValue" ] == "" )
         g_BrivUserSettings[ "ManualBrivJumpValue" ] := 0
-    if ( g_BrivUserSettings[ "BrivJumpBuffer" ] == "" )
-        g_BrivUserSettings[ "BrivJumpBuffer" ] := 0
     if ( g_BrivUserSettings[ "DisableDashWait" ] == "" )
         g_BrivUserSettings[ "DisableDashWait" ] := false
     if ( g_BrivUserSettings[ "RestoreLastWindowOnGameOpen" ] == "" )

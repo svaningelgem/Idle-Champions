@@ -74,6 +74,8 @@ class Runner {
         this.StartMiniScripts()
         this.ConnectToEXE()
         this.StartAddons()
+
+        g_BrivFarm.GemFarm()
     }
 
     Briv_Run_Stop_Clicked() {
@@ -103,5 +105,4 @@ class Runner {
         else
             GuiControl, ICScriptHub:, Warning_Imports_Bad, % ""
     }
-
 }

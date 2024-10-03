@@ -1,4 +1,4 @@
-
+/*
 #include *i %A_LineFile%\..\IC_BrivGemFarm_Mods.ahk
 
 ;check if first run
@@ -146,3 +146,4 @@ BrivPerformanceGemFarmGuiClose()
     IfMsgBox, Cancel
         return true
 }
+*/

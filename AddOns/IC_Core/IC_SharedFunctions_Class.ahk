@@ -528,8 +528,12 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         {
             this.Settings := settings
         }
+
+        currentZone := this.Memory.ReadCurrentZone()
+
         ;only send input messages if necessary
         brivBenched := this.Memory.ReadChampBenchedByID(58)
+
         ;check to bench briv
         if (!brivBenched AND this.BenchBrivConditions(this.Settings))
         {
@@ -545,7 +549,7 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
             return
         }
         isFormation2 := this.IsCurrentFormation(this.Memory.GetFormationByFavorite(2))
-        isWalkZone := this.Settings["PreferredBrivJumpZones"][Mod( this.Memory.ReadCurrentZone(), 50) == 0 ? 50 : Mod( this.Memory.ReadCurrentZone(), 50)] == 0
+        isWalkZone := this.Settings["PreferredBrivJumpZones"][this.GetModdedCurrentZone()] == 0
         ; check to swap briv from favorite 2 to favorite 3 (W to E)
         if (!brivBenched AND isFormation2 AND isWalkZone)
         {
@@ -562,21 +566,25 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
         }
     }
 
+    GetModdedCurrentZone() {
+        currentZone := this.Memory.ReadCurrentZone()
+        currentZoneMod50 := Mod(currentZone, 50)
+
+        if (currentZoneMod50 == 0)
+            return 50
+
+        return currentZoneMod50
+    }
+
     ; True/False on whether Briv should be benched based on game conditions.
     BenchBrivConditions(settings)
     {
         ;bench briv if jump animation override is added to list and it isn't a quick transition (reading ReadFormationTransitionDir makes sure QT isn't read too early)
         if (this.Memory.ReadTransitionOverrideSize() == 1 AND this.Memory.ReadTransitionDirection() != 2 AND this.Memory.ReadFormationTransitionDir() == 3 )
             return true
+
         ;bench briv not in a preferred briv jump zone
-        if (settings["PreferredBrivJumpZones"][Mod( this.Memory.ReadCurrentZone(), 50) == 0 ? 50 : Mod( this.Memory.ReadCurrentZone(), 50) ] == 0)
-            return true
-        ;perform no other checks if 'Briv Jump Buffer' setting is disabled
-        if !(settings[ "BrivJumpBuffer" ])
-            return false
-        ;bench briv if within the 'Briv Jump Buffer'-supposedly this reduces chances of failed conversions by having briv on bench during modron reset.
-        maxSwapArea := this.ModronResetZone - settings[ "BrivJumpBuffer" ]
-        if (this.Memory.ReadCurrentZone() >= maxSwapArea)
+        if (settings["PreferredBrivJumpZones"][this.GetModdedCurrentZone()] == 0)
             return true
 
         return false
@@ -586,20 +594,15 @@ class IC_SharedFunctions_Class extends SH_SharedFunctions
     UnBenchBrivConditions(settings)
     {
         ; do not unbench briv if party is not on a perferred briv jump zone.
-        if (settings["PreferredBrivJumpZones"][Mod( this.Memory.ReadCurrentZone(), 50) == 0 ? 50 :  Mod(this.Memory.ReadCurrentZone(), 50)] == 0)
+        if (settings["PreferredBrivJumpZones"][this.GetModdedCurrentZone()] == 0)
             return false
+
         ;unbench briv if 'Briv Jump Buffer' setting is disabled and transition direction is "OnFromLeft"
-        if (!(settings[ "BrivJumpBuffer" ]) AND this.Memory.ReadFormationTransitionDir() == 0)
+        if (this.Memory.ReadFormationTransitionDir() == 0)
             return true
-        ;perform no other checks if 'Briv Jump Buffer' setting is disabled
-        else if !(settings[ "BrivJumpBuffer" ])
-            return false
-        ;keep briv benched if within the 'Briv Jump Buffer'-supposedly this reduces chances of failed conversions by having briv on bench during modron reset.
-        maxSwapArea := this.ModronResetZone - settings[ "BrivJumpBuffer" ]
-        if (this.Memory.ReadCurrentZone() >= maxSwapArea)
-            return false
+
         ;unbench briv if outside the 'Briv Jump Buffer' and a jump animation override isn't added to the list
-        else if (this.Memory.ReadTransitionOverrideSize() != 1)
+        if (this.Memory.ReadTransitionOverrideSize() != 1)
             return true
 
         return false

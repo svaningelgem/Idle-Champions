@@ -106,24 +106,32 @@ class IC_BrivGemFarm_Class
     {
         g_SharedData.LoopString := "Leveling champions"
         formationFavorite1 := g_SF.Memory.GetFormationByFavorite( 1 )
-        isShandieInFormation := g_SF.IsChampInFormation( 47, formationFavorite1 )
+
         g_SF.LevelChampByID( 58, 170, 7000, g_SCKeyMap["q"]) ; level briv
+
+        isShandieInFormation := g_SF.IsChampInFormation( 47, formationFavorite1 )
         if (isShandieInFormation)
             g_SF.LevelChampByID( 47, 230, 7000, g_SCKeyMap["q"]) ; level shandie
+
         isHavilarInFormation := g_SF.IsChampInFormation( 56, formationFavorite1 )
         if (isHavilarInFormation)
             g_SF.LevelChampByID( 56, 15, 7000, g_SCKeyMap["q"]) ; level havi
+
         if (g_BrivUserSettings[ "Fkeys" ])
         {
             this.keyspam := g_SF.GetFormationFKeys(g_SF.Memory.GetActiveModronFormation()) ; level other formation champions
             keyspam.Push("{ClickDmg}")
             g_SF.DirectedInput(,release :=0, keyspam*) ;keysdown
         }
+
         g_SF.ModronResetZone := g_SF.Memory.GetModronResetArea() ; once per zone in case user changes it mid run.
+
         if (g_SF.ShouldRushWait())
             g_SF.DoRushWait()
+
         if (g_SF.ShouldDashWait())
             g_SF.DoDashWait( Max(g_SF.ModronResetZone - g_BrivUserSettings[ "DashWaitBuffer" ], 0) )
+
         g_SF.ToggleAutoProgress( true, false, true )
     }
 
@@ -163,8 +171,6 @@ class IC_BrivGemFarm_Class
             g_SF.LogMessage("Pre-flight check failed. Exiting GemFarm()")
             return -1
         }
-
-        return 0
 
         g_SF.ToggleAutoProgress(false, false, true)
 
